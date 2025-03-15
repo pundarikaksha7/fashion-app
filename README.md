@@ -8,7 +8,7 @@ Welcome to the repository. This is a Full Stack project implemented using Django
    Open your terminal and write the following command:
    
            git clone "https://github.com/pundarikaksha7/fashion-app.git"
-3. Create a virtual environment.
+3. Create a virtual environment. You can check the internet on how to create a virtual environment on your respective machines.
 4. Install the requirements:
           ```pip install -r requirements.txt```
 6. Run the server by the following command:
