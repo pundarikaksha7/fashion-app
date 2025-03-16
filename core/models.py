@@ -26,6 +26,22 @@ class Post(models.Model):
 
     def __str__(self):
         return self.user
+    @property
+    def profile_image(self):
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        try:
+            user_obj = User.objects.get(username=self.user)
+            # Use profile_set.first() since the relationship is a ForeignKey.
+            profile = user_obj.profile_set.first()
+            if profile:
+                return profile.profileimg.url
+            else:
+                return '/media/profile_images/blank-profile-picture.png'
+        except User.DoesNotExist:
+            return '/media/profile_images/blank-profile-picture.png'
+
+    
 
 class LikePost(models.Model):
     post_id = models.CharField(max_length=500)
