@@ -2,181 +2,241 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
-
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="" />
-    <meta name="keywords" content="" />
-	<title>Profile - {{user_profile.user.username}}</title>
-   <!-- <link rel="icon" href="images/fav.png" type="image/png" sizes="16x16"> -->
+    <meta name="description" content="User profile page" />
+    <meta name="keywords" content="profile, social media, user" />
+    <title>Profile - {{user_profile.user.username}}</title>
     
     <link rel="stylesheet" href="{% static 'css/main.min.css' %}">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/color.css' %}">
     <link rel="stylesheet" href="{% static 'css/responsive.css' %}">
-
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    
+    <style>
+        /* Additional inline styles for better appearance */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f8f8;
+        }
+        .section-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #da334f;
+        }
+        .profile-header {
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .profile-stats {
+            display: flex;
+            justify-content: space-around;
+            padding: 15px 0;
+            border-top: 1px solid #eee;
+            border-bottom: 1px solid #eee;
+            margin: 15px 0;
+        }
+        .stat-box {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 22px;
+            font-weight: bold;
+            color: #333;
+        }
+        .stat-label {
+            font-size: 14px;
+            color: #777;
+        }
+        .bio-section {
+            background-color: #fff;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+        .post-item {
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .post-item:hover {
+            transform: translateY(-5px);
+        }
+        .post-image {
+            height: 250px;
+            width: 100%;
+            object-fit: cover;
+        }
+        .home-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background-color: white;
+            padding: 10px;
+            border-radius: 50%;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        .action-btn {
+            background-color: #da334f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .action-btn:hover {
+            background-color: #b82b42;
+        }
+        .profile-img-container {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+        .profile-img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid white;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+			transition: all 0.2s ease-in;
+        }
+		.profile-img:hover {
+			cursor: pointer;
+			box-shadow: 0 0 0 5px rgba(234, 51, 79, 0.4);
+			transform: scale(1.05);
+		}
+    </style>
 </head>
+
 <body>
-<!--<div class="se-pre-con"></div>-->
-<div class="theme-layout">
-	
-	</div>
-	
-	<section>
-			<div class="feature-photo">
-				<figure><img src="{% static 'images/resources/timeline-1.jpg' %}" alt=""></figure>
-				<form action="/follow" method="POST">
-					{% csrf_token %}
-					<div class="add-btn">
-					<span style="color: white; font-size: 27px; margin-right: 520px;"><b><u><a href="/">Home</a></u></b></span>
-					
-					{% if user_post_length == 0 %}
-					<span style="color: white; font-size: 27px;"><b>No Post</b></span>
-					{% elif user_post_length == 1 %}
-					<span style="color: white; font-size: 27px;"><b>{{user_post_length}} Post</b></span>
-					{% else %}
-					<span style="color: white; font-size: 27px;"><b>{{user_post_length}} Posts</b></span>
-					{% endif %}
-
-					{% if user_followers == 0 or user_followers == 1 %}
-					<span style="color: white; font-size: 27px;"><b>{{user_followers}} follower</b></span>
-					{% else %}
-					<span style="color: white; font-size: 27px;"><b>{{user_followers}} followers</b></span>
-					{% endif %}
-
-
-					<span style="color: white; font-size: 27px;"><b>{{user_following}} following</b></span>
-
-					<input type="hidden" value="{{user.username}}" name="follower" />
-					<input type="hidden" value="{{user_object.username}}" name="user" />
-
-					{% if user_object.username == user.username %}
-					<a href="/settings" data-ripple="">Account Settings</a>
-					{% else %}
-					<a data-ripple=""><button type="submit" style="background-color: #ffc0cb; border: #ffc0cb;">{{button_text}}</button></a>
-					{% endif %}
-
-					</div>
-				</form>
-
-				<!-- <form class="edit-phto">
-					<i class="fa fa-camera-retro"></i>
-					<label class="fileContainer">
-						Upload Cover Photo
-					<input type="file"/>
-					</label>
-				</form> -->
-				<div class="container-fluid">
-					<div class="row merged">
-						<div class="col-lg-2 col-sm-3">
-							<div class="user-avatar">
-								<figure>
-									<img src="{{user_profile.profileimg.url}}" style="height: 250px; width: 100%;" alt="">
-									<!-- <form class="edit-phto">
-										<i class="fa fa-camera-retro"></i>
-										<label class="fileContainer">
-											<a href="#account-settings">Upload Profile Photo</a>
-										</label>
-									</form> -->
-								</figure>
-							</div>
-						</div>
-						<div class="col-lg-10 col-sm-9">
-							<div class="timeline-info">
-								<ul>
-									<li class="admin-name">
-									  <h5 style="color: black;white-space: nowrap; width: 110px; font-size: 27px;"><b>@{{user_profile.user.username}}</b><!--<i class="fa fa-check-circle" style="color: #48dbfb;" aria-hidden="true"></i>--></h5>
-									  <!--<span>Group Admin</span>-->
-									</li>
-									<!--<li>
-										<a class="" href="javascript:void(0)" title="" data-ripple="">Go live!</a>
-										<a class="" href="javascript:void(0)" title="" data-ripple="">Music</a>
-										<a class="" href="emporium/index-3.html" title="" data-ripple="">Emporium</a>
-										<a class="" href="fitness/index.html" title="" data-ripple="">Health Inspection</a>
-										<a class="" href="settings/account-setting.html" title="" data-ripple="">Settings</a>
-										<a class="" href="javascript:void(0)" title="" data-ripple="">Upload</a>
-										<a class="" href="time-line.html" title="" data-ripple="">time line</a>
-										<a class="" href="timeline-photos.html" title="" data-ripple="">Photos</a>
-										<a class="" href="timeline-videos.html" title="" data-ripple="">Videos</a>
-										<a class="" href="timeline-friends.html" title="" data-ripple="">Friends</a>
-										<a class="" href="timeline-groups.html" title="" data-ripple="">Groups</a>
-										<a class="" href="about.html" title="" data-ripple="">about</a>
-										<a class="" href="#" title="" data-ripple="">more</a>
-
-									</li>-->
-								</ul>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
-		</section><!-- top area -->
-		<section>
-			<div class="bio">
-					{{user_profile.bio}}
-			</div>
-		</section>
-		
-	<section>
-		<div class="gap gray-bg">
-			<div class="container-fluid">
-				<div class="row">
-					<div class="col-lg-12">
-						<div class="row" id="page-contents">
-							<div class="col-lg-3">
-								<aside class="sidebar static">
-									
-									
-									
-								</aside>
-							</div><!-- sidebar -->
-							
-
-
-
-
-
-
-
-
-
-							<div class="col-lg-6">
-								<div class="central-meta">
-									<ul class="photos">
-					
-										{% for post in user_posts %}
-										<li>
-											<a class="strip" href="{{post.image.url}}" title="" data-strip-group="mygroup" data-strip-group-options="loop: false">
-												<img src="{{post.image.url}}" style="height: 250px; width: 300px;" alt=""></a>
-										</li>
-										{% endfor %}
-										
-										
-										
-									</ul>
-									<!--<div class="lodmore"><button class="btn-view btn-load-more"></button></div>-->
-								</div><!-- photos -->
-							</div><!-- centerl meta -->
-							<div class="col-lg-3">
-								<aside class="sidebar static">
-									
-								</aside>
-							</div><!-- sidebar -->
-						</div>	
-					</div>
-				</div>
-			</div>
-		</div>	
-	</section>
-
-	
-	
-	<script data-cfasync="false" src="{% static '../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js' %}"></script><script src="{% static 'js/main.min.js' %}"></script>
-	<script src="{% static 'js/script.js' %}"></script>
-
-</body>	
-
-
+    <div class="theme-layout">
+        <!-- Home Button -->
+        <a href="/" class="home-btn">
+            <i class="fa fa-home fa-2x" style="color:#da334f"></i>
+        </a>
+        
+        <!-- Profile Header Section -->
+        <section style="padding-top: 86px; padding-left: 20px; padding-right: 20px;">
+            <div class="profile-header">
+                <div class="row">
+                    <!-- Profile Image -->
+                    <div class="col-lg-3 col-md-4 text-center">
+                        <div class="profile-img-container">
+                            <img src="{{user_profile.profileimg.url}}" class="profile-img" alt="Profile Image">
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Info -->
+                    <div class="col-lg-9 col-md-8">
+                        <h1 style="font-size: 28px; margin-bottom: 5px;">
+                            <b>@{{user_profile.user.username}}</b>
+                        </h1>
+                        
+                        <!-- Profile Stats -->
+                        <div class="profile-stats">
+                            <div class="stat-box">
+                                <div class="stat-number">{{user_post_length}}</div>
+                                <div class="stat-label">{% if user_post_length == 1 %}Post{% else %}Posts{% endif %}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-number">{{user_followers}}</div>
+                                <div class="stat-label">{% if user_followers == 1 %}Follower{% else %}Followers{% endif %}</div>
+                            </div>
+                            <div class="stat-box">
+                                <div class="stat-number">{{user_following}}</div>
+                                <div class="stat-label">Following</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Action Buttons -->
+                        <div style="margin-top: 20px;">
+                            <form action="/follow" method="POST" style="display: inline;">
+                                {% csrf_token %}
+                                <input type="hidden" value="{{user.username}}" name="follower" />
+                                <input type="hidden" value="{{user_object.username}}" name="user" />
+                                
+                                {% if user_object.username == user.username %}
+                                    <a href="/settings" class="action-btn">
+                                        <i class="fa fa-cog"></i> Account Settings
+                                    </a>
+                                {% else %}
+                                    <button type="submit" class="action-btn" style=`{% if button_text == 'Follow' %}background-color: #da334f;{% else %}background-color: #777;{% endif %}`>
+                                        {% if button_text == 'Follow' %}
+                                            <i class="fa fa-plus"></i>
+                                        {% else %}
+                                            <i class="fa fa-check"></i>
+                                        {% endif %}
+                                        {{button_text}}
+                                    </button>
+                                {% endif %}
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Bio Section -->
+        <section style="padding: 0 20px 0 20px;">
+            <div class="bio-section">
+                <h2 class="section-title">About</h2>
+                <div style="line-height: 1.6; color: #444;">
+                    {% if user_profile.bio %}
+                        {{user_profile.bio}}
+                    {% else %}
+                        <p style="color: #999; font-style: italic;">No bio available</p>
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+        
+        <!-- Posts Section -->
+        <section style="margin-bottom: 50px; padding-left: 20px; padding-right: 20px;">
+            <div style="background-color: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h2 class="section-title">Posts</h2>
+                
+                {% if user_posts %}
+                    <div class="posts-grid">
+                        {% for post in user_posts %}
+                            <div class="post-item">
+                                <a href="{{post.image.url}}" title="" data-strip-group="mygroup" data-strip-group-options="loop: false">
+                                    <img src="{{post.image.url}}" class="post-image" alt="Post Image">
+                                </a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 40px 0;">
+                        <i class="fa fa-picture-o fa-4x" style="color: #ddd;"></i>
+                        <p style="color: #999; margin-top: 10px;">No posts yet</p>
+                    </div>
+                {% endif %}
+            </div>
+        </section>
+    </div>
+    
+    <script data-cfasync="false" src="{% static '../../cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js' %}"></script>
+    <script src="{% static 'js/main.min.js' %}"></script>
+    <script src="{% static 'js/script.js' %}"></script>
+</body>
 </html>
