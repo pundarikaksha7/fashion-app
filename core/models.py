@@ -26,6 +26,8 @@ class Post(models.Model):
 
     def __str__(self):
         return self.user
+    
+    # updated for profile image in post section  
     @property
     def profile_image(self):
         from django.contrib.auth import get_user_model
