@@ -3,6 +3,7 @@ from django.contrib.auth.models import User, auth
 from django.contrib import messages
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from .models import Profile, Post, LikePost, FollowersCount, Comment
 from itertools import chain
 import random
@@ -124,12 +125,12 @@ def like_post(request):
         new_like.save()
         post.no_of_likes = post.no_of_likes+1
         post.save()
-        return redirect('/')
+        return JsonResponse({'success': True, 'new_like_count': post.no_of_likes, 'liked': True})
     else:
         like_filter.delete()
         post.no_of_likes = post.no_of_likes-1
         post.save()
-        return redirect('/')
+        return JsonResponse({'success': True, 'new_like_count': post.no_of_likes, 'liked': False})
 
 @login_required(login_url='signin')
 def profile(request, pk):
