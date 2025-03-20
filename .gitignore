@@ -1,0 +1,14 @@
+# Python cache and compiled files
+__pycache__/
+*.pyc
+
+# Environment and virtual environment
+.env
+venv/
+
+# Database file
+db.sqlite3
+
+# OS-generated files
+.DS_Store
+Thumbs.db
