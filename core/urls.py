@@ -12,6 +12,5 @@ urlpatterns = [
     path('signup', views.signup, name='signup'),
     path('signin', views.signin, name='signin'),
     path('logout', views.logout, name='logout'),
-    path('comment/<uuid:post_id>', views.add_comment, name='add-comment'),  # New URL for comments
-
+    path('comment/', views.add_comment, name='add-comment'),
 ]
