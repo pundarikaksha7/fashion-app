@@ -11,16 +11,29 @@ import random
 # Create your views here.
 
 # Add comment view
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseBadRequest
+from .models import Post, Comment
+
 @login_required(login_url='signin')
-def add_comment(request, post_id):
+def add_comment(request):
     if request.method == 'POST':
         text = request.POST.get('comment_text')
+        post_id = request.GET.get('post_id')
+
+        if not post_id or not text:
+            return HttpResponseBadRequest("Missing post_id or comment_text.")
+
         post = get_object_or_404(Post, id=post_id)
 
-        if text:
-            Comment.objects.create(post=post, user=request.user, text=text)
+        Comment.objects.create(post=post, user=request.user, text=text)
 
-        return redirect(request.META.get('HTTP_REFERER', '/'))  # Redirect to the previous page
+        # Redirect to the referring page
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
+    return HttpResponseBadRequest("Invalid request method.")
+
 
 
 @login_required(login_url='signin')
