@@ -1,0 +1,63 @@
+name: Bug Report
+description: Report a bug related to the Fashion app.
+labels:
+  - "bug"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        :warning: **Before submitting, please check the existing issues and FAQ to avoid duplicates!** 
+        - **Common Django Issues:** [Django Docs](https://docs.djangoproject.com/en/stable/)
+        - **Common React Issues:** [React Docs](https://reactjs.org/docs/getting-started.html)
+        - **Common JavaScript Issues:** [MDN Web Docs](https://developer.mozilla.org/en-US/)
+  - type: textarea
+    attributes:
+      label: Describe the bug
+      description: Provide a clear and concise description of the issue.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Provide step-by-step instructions to reproduce the issue.
+      placeholder: |
+        1. Open the app
+        2. Perform action XYZ
+        3. See the error
+  - type: textarea
+    attributes:
+      label: Expected Behavior
+      description: Describe what you expected to happen.
+  - type: textarea
+    attributes:
+      label: Actual Behavior
+      description: Describe what actually happened.
+  - type: textarea
+    attributes:
+      label: Error Logs / Console Output
+      description: |
+        If applicable, paste relevant error logs from the Django backend or React frontend.
+      placeholder: |
+        Paste error logs here
+  - type: textarea
+    attributes:
+      label: Screenshots / Screen Recording
+      description: Attach any screenshots or recordings that illustrate the issue.
+  - type: input
+    attributes:
+      label: Django Features Used
+      description: List the Django features/services in use (e.g., Django REST Framework, Authentication, etc.).
+      placeholder: "e.g., Django REST Framework, Django ORM"
+  - type: input
+    attributes:
+      label: React Libraries Used
+      description: List the React libraries in use (e.g., React Router, Redux, Axios, etc.).
+      placeholder: "e.g., React Router, Redux"
+  - type: dropdown
+    attributes:
+      label: Would you like to work on this issue?
+      description: Select whether you would like to work on this issue
+      multiple: false
+      options:
+        - 'Yes'
+        - 'No'
