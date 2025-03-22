@@ -1,0 +1,6 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Issues
+    url: https://github.com/pundarikaksha7/fashion-app/issues
+    about:
+      Before opening a bug report, please check the issues to avoid duplicates!
