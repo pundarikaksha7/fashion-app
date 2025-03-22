@@ -280,7 +280,7 @@
                         <div class="border-t pt-4 space-y-4">
                             {% for comment in post.comments.all %}
                             <div class="flex items-start space-x-2">
-                                <img src="{{comment.user.profile.profileimg.url}}" alt="" class="w-8 h-8 rounded-full">
+                                <img src="{{ comment.profile_image }}" alt="" class="w-8 h-8 rounded-full">
                                 <div>
                                     <p class="text-sm"><strong>{{comment.user.username}}</strong> {{comment.text}}</p>
                                     <span class="text-xs text-gray-500">{{comment.created_at|date:"M d, Y H:i"}}</span>
