@@ -66,3 +66,15 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"{self.user.username} on {self.post.id}"
+
+    @property
+    def profile_image(self):
+        try:
+            profile = self.user.profile_set.first()
+            if profile and profile.profileimg:
+                return profile.profileimg.url
+        except AttributeError:
+            pass  # If profile does not exist or has no image
+
+        return '/media/profile_images/blank-profile-picture.png'
+
