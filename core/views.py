@@ -13,8 +13,9 @@ import random
 # Add comment view
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest
+from django.http import HttpResponseBadRequest, JsonResponse
 from .models import Post, Comment
+from django.utils.timezone import localtime
 
 @login_required(login_url='signin')
 def add_comment(request):
@@ -27,13 +28,30 @@ def add_comment(request):
 
         post = get_object_or_404(Post, id=post_id)
 
-        Comment.objects.create(post=post, user=request.user, text=text)
+        # Create the comment
+        comment = Comment.objects.create(post=post, user=request.user, text=text)
 
-        # Redirect to the referring page
-        return redirect(request.META.get('HTTP_REFERER', '/'))
+        # Return the new comment data as JSON
+        return JsonResponse({
+            'comment_id': comment.id,
+            'username': comment.user.username,
+            'comment_text': comment.text,
+            'created_at': localtime(comment.created_at).strftime('%Y-%m-%d %H:%M:%S'),  # Format the timestamp
+        })
 
     return HttpResponseBadRequest("Invalid request method.")
 
+@login_required
+def has_liked(request):
+    # Get the post ID from the request
+    post_id = request.GET.get('post_id')
+    username = request.user.username  # Get the current user's username
+
+    # Check if the current user has liked the post
+    # Query LikePost based on the post_id (string) and username
+    has_liked = LikePost.objects.filter(post_id=str(post_id), username=username).exists()
+
+    return JsonResponse({'success': True, 'has_liked': has_liked})
 
 
 @login_required(login_url='signin')

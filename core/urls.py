@@ -13,4 +13,5 @@ urlpatterns = [
     path('signin', views.signin, name='signin'),
     path('logout', views.logout, name='logout'),
     path('comment/', views.add_comment, name='add-comment'),
+    path('has-liked/', views.has_liked, name='has_liked'),
 ]
