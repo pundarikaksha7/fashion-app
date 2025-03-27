@@ -17,13 +17,13 @@ from django.http import HttpResponseBadRequest
 from .models import Post, Comment
 
 @login_required(login_url='signin')
-def add_comment(request):
+def add_comment(request,post_id):
     if request.method == 'POST':
         text = request.POST.get('comment_text')
-        post_id = request.GET.get('post_id')
+        # post_id = request.GET.get('post_id')
 
-        if not post_id or not text:
-            return HttpResponseBadRequest("Missing post_id or comment_text.")
+        # if not post_id or not text:
+        #     return HttpResponseBadRequest("Missing post_id or comment_text.")
 
         post = get_object_or_404(Post, id=post_id)
 
