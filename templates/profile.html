@@ -534,16 +534,20 @@
                         <form action="/like-post" method="POST" class="like-form" id="like-form-{{ post.id }}" style="display: inline;">
                             {% csrf_token %}
                             <input type="hidden" name="post_id" value="{{ post.id }}">
-                            <button type="button" class="like-btn {% if user.username in post.liked_by %}active{% endif %}" id="like-btn-{{ post.id }}" onclick="toggleLike('{{ post.id }}')">
-                                <i class="fa fa-heart"></i> Like
-                            </button>
+                            <button type="button" 
+                            class="like-btn {% if user.username in post.liked_by %}active{% endif %}" 
+                            id="like-btn-{{ post.id }}" 
+                            data-post-id="{{ post.id }}" 
+                            onclick="toggleLike('{{ post.id }}')">
+                            <i class="fa fa-heart"></i> Like
+                        </button>                                       
                         </form>
                     </div>
                     
                     <!-- Comments section -->
-                    <div class="comments-list" id="comments-list-{{post.id}}">
+                    <div class="comments-list" id="comments-list-{{ post.id }}">
                         {% for comment in post.comments.all %}
-                            <div class="comment" id="comment-{{comment.id}}">
+                            <div class="comment" id="comment-{{ comment.id }}">
                                 <p>{{ comment.user.username }}: {{ comment.text }}</p>
                                 <small>{{ comment.created_at }}</small>
                             </div>
@@ -551,12 +555,12 @@
                     </div>
                     
                     <!-- Add comment form -->
-                     <form id="comment-form-{{ post.id }}" method="POST" action="/comment/?post_id={{ post.id }}" data-post-id="{{ post.id }}">
+                    <form id="comment-form-{{ post.id }}" method="POST" data-post-id="{{ post.id }}">
                         {% csrf_token %}
                         <textarea name="comment_text" placeholder="Add a comment..." required></textarea>
-                        <button type="submit" class="comment-btn">Post Comment</button>
-                    </form>                    
-                    
+                        <button type="button" class="comment-btn" onclick="submitComment('{{ post.id }}')">Post Comment</button>
+                    </form>
+
                     <div class="created-time">
                         Posted on {{post.created_at|date:"F d, Y"}}
                     </div>
@@ -600,44 +604,77 @@
         });
 
 // Function to toggle like/unlike
-// Function to toggle like/unlike
 function toggleLike(postId) {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;  // Get CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-    // Make the AJAX GET request
     fetch(`/like-post?post_id=${postId}`, {
         method: 'GET',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest',  // Indicate it's an AJAX request
-            'X-CSRFToken': csrfToken  // Include CSRF token
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrfToken
         }
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Failed to like/unlike post');
-        }
-        return response.json(); // Assuming the backend returns JSON with updated data
-    })
+    .then(response => response.json())
     .then(data => {
-        // Check if the like/unlike was successful
         if (data.success) {
             const likeButton = document.getElementById(`like-btn-${postId}`);
-            const likeCountElement = document.getElementById(`likes-count-${postId}`);
+            const likeCountElementGrid = document.getElementById(`likes-count-grid-${postId}`);
+            const likeCountElementModal = document.getElementById(`likes-count-${postId}`);
             
-            // Toggle the "active" class on the button to change the state (like/unlike)
             likeButton.classList.toggle('active');
+            likeCountElementGrid.textContent = data.new_like_count;
+            likeCountElementModal.textContent = data.new_like_count;
 
-            // Update the like count (optional)
-            likeCountElement.textContent = data.new_like_count;
-
-            // Optionally, change the button text if needed
-            if (likeButton.classList.contains('active')) {
-                likeButton.innerHTML = '<i class="fa fa-heart"></i> Liked';  // Change text to "Liked"
+            // Update the like button text based on the like status
+            if (data.liked) {
+                likeButton.innerHTML = '<i class="fa fa-heart"></i> Liked';
             } else {
-                likeButton.innerHTML = '<i class="fa fa-heart"></i> Like';  // Change text back to "Like"
+                likeButton.innerHTML = '<i class="fa fa-heart"></i> Like';
             }
-        } else {
-            console.error('Error: Unable to update like status');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+function submitComment(postId) {
+    const form = document.querySelector(`#comment-form-${postId}`);
+    const commentText = form.querySelector('textarea[name="comment_text"]').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const formData = new FormData();
+    formData.append('comment_text', commentText);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch(`/comment/?post_id=${postId}`, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.comment_id) {
+            const commentSection = document.querySelector(`#comments-list-${postId}`);
+            const commentCountElementGrid = document.getElementById(`comments-count-grid-${postId}`);
+            const commentCountElementModal = document.getElementById(`comments-count-${postId}`);
+            
+            // Create the new comment HTML element
+            const newCommentHtml = `
+                <div class="comment" id="comment-${data.comment_id}">
+                    <p><strong>${data.username}</strong>: ${data.comment_text}</p>
+                    <small>${data.created_at}</small>
+                </div>
+            `;
+            
+            // Append the new comment to the comments section
+            commentSection.innerHTML += newCommentHtml;
+
+            // Update the comment count in both the grid and modal
+            commentCountElementGrid.textContent = data.new_comment_count;
+            commentCountElementModal.textContent = data.new_comment_count;
+
+            // Clear the textarea in the form
+            form.querySelector('textarea').value = '';
         }
     })
     .catch(error => {
@@ -646,39 +683,25 @@ function toggleLike(postId) {
 }
 
 
-document.querySelectorAll('.comment-form').forEach(form => {
-    form.addEventListener('submit', function(event) {
-        event.preventDefault();  // Prevent default form submission
+document.addEventListener("DOMContentLoaded", function () {
+    const likeButtons = document.querySelectorAll('.like-btn');
 
-        const postId = form.getAttribute('data-post-id');  // Get the post ID (UUID)
-        const commentText = form.querySelector('textarea[name="comment_text"]').value;  // Get the comment text
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;  // Get the CSRF token
+    likeButtons.forEach(button => {
+        const postId = button.getAttribute('data-post-id');
+        console.log("POST ID: ", postId);
 
-        // Create FormData object to send via AJAX
-        const formData = new FormData();
-        formData.append('comment_text', commentText);
-        formData.append('csrfmiddlewaretoken', csrfToken);
-
-        // Send the comment via AJAX to the backend
-        fetch(`/comment/${postId}/`, {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => {
-            if (response.ok) {
-                // If the backend responds successfully, get the URL for redirect
-                return response.text();  // Redirect URL from the backend
-            } else {
-                throw new Error('Failed to add comment');
-            }
-        })
-        .then(url => {
-            // Simulate the backend redirect behavior
-            window.location.href = url;  // Redirect to the same URL after comment is added
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+        // Fetch the like status
+        fetch(`/has-liked/?post_id=${postId}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.has_liked) {
+                    button.classList.add('active');
+                    button.innerHTML = '<i class="fa fa-heart"></i> Liked';
+                }
+            })
+            .catch(error => {
+                console.error('Error checking like status:', error);
+            });
     });
 });
 

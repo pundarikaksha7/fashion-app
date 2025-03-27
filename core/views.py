@@ -7,33 +7,55 @@ from django.http import JsonResponse
 from .models import Profile, Post, LikePost, FollowersCount, Comment
 from itertools import chain
 import random
-
+from django.shortcuts import redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseBadRequest, JsonResponse
+from .models import Post, Comment
+from django.utils.timezone import localtime
 # Create your views here.
 
 # Add comment view
-from django.shortcuts import redirect, get_object_or_404
-from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseBadRequest
-from .models import Post, Comment
 
 @login_required(login_url='signin')
-def add_comment(request,post_id):
+def add_comment(request):
     if request.method == 'POST':
         text = request.POST.get('comment_text')
-        # post_id = request.GET.get('post_id')
+        post_id = request.GET.get('post_id')
 
-        # if not post_id or not text:
-        #     return HttpResponseBadRequest("Missing post_id or comment_text.")
+        if not post_id or not text:
+            return HttpResponseBadRequest("Missing post_id or comment_text.")
 
         post = get_object_or_404(Post, id=post_id)
 
-        Comment.objects.create(post=post, user=request.user, text=text)
+        # Create the comment
+        comment = Comment.objects.create(post=post, user=request.user, text=text)
 
-        # Redirect to the referring page
-        return redirect(request.META.get('HTTP_REFERER', '/'))
+        # Get the updated number of comments for this post
+        new_comment_count = post.comments.count()
+
+        # Return the new comment data and the updated comment count as JSON
+        return JsonResponse({
+            'comment_id': comment.id,
+            'username': comment.user.username,
+            'comment_text': comment.text,
+            'created_at': localtime(comment.created_at).strftime('%Y-%m-%d %H:%M:%S'),
+            'new_comment_count': new_comment_count,  # Send the new comment count back
+        })
 
     return HttpResponseBadRequest("Invalid request method.")
 
+
+@login_required
+def has_liked(request):
+    # Get the post ID from the request
+    post_id = request.GET.get('post_id')
+    username = request.user.username  # Get the current user's username
+
+    # Check if the current user has liked the post
+    # Query LikePost based on the post_id (string) and username
+    has_liked = LikePost.objects.filter(post_id=str(post_id), username=username).exists()
+
+    return JsonResponse({'success': True, 'has_liked': has_liked})
 
 
 @login_required(login_url='signin')
