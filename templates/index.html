@@ -290,16 +290,15 @@
                         </div>
 
                         <!-- add comment form -->
-                        <form method="POST" action="{% url 'add-comment' post.id %}">
+                        <form id="comment-form-{{ post.id }}" method="POST" data-post-id="{{ post.id }}">
                             {% csrf_token %}
-                            <div class="mt-3 flex items-center">
-                                <input type="text" name="comment_text"
-                                    class="flex-1 border rounded-lg py-2 px-3 text-sm" placeholder="Add a comment..."
-                                    required>
-                                <button type="submit"
-                                    class="ml-2 bg-pink-500 text-white text-sm py-2 px-4 rounded-lg hover:bg-blue-600">Post</button>
-                            </div>
+                            <textarea name="comment_text" placeholder="Add a comment..." required></textarea>
+                            <button type="button" class="comment-btn" onclick="submitComment('{{ post.id }}')">Post Comment</button>
                         </form>
+    
+                        <div class="created-time">
+                            Posted on {{post.created_at|date:"F d, Y"}}
+                        </div>
                     </div>
                 </div>
                 {% endfor %}
@@ -374,6 +373,53 @@
 
     <script type="module" src="https://cdn.jsdelivr.net/npm/ionicons@5.2.3/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://cdn.jsdelivr.net/npm/ionicons@5.2.3/dist/ionicons/ionicons.js"></script>
+
+    <script>
+        function submitComment(postId) {
+    const form = document.querySelector(`#comment-form-${postId}`);
+    const commentText = form.querySelector('textarea[name="comment_text"]').value;
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+    const formData = new FormData();
+    formData.append('comment_text', commentText);
+    formData.append('csrfmiddlewaretoken', csrfToken);
+
+    fetch(`/comment/?post_id=${postId}`, {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.comment_id) {
+            const commentSection = document.querySelector(`#comments-list-${postId}`);
+            const commentCountElementGrid = document.getElementById(`comments-count-grid-${postId}`);
+            const commentCountElementModal = document.getElementById(`comments-count-${postId}`);
+            
+            // Create the new comment HTML element
+            const newCommentHtml = `
+                <div class="comment" id="comment-${data.comment_id}">
+                    <p><strong>${data.username}</strong>: ${data.comment_text}</p>
+                    <small>${data.created_at}</small>
+                </div>
+            `;
+            
+            // Append the new comment to the comments section
+            commentSection.innerHTML += newCommentHtml;
+
+            // Update the comment count in both the grid and modal
+            commentCountElementGrid.textContent = data.new_comment_count;
+            commentCountElementModal.textContent = data.new_comment_count;
+
+            // Clear the textarea in the form
+            form.querySelector('textarea').value = '';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+}
+
+    </script>
 
    
 </body>
