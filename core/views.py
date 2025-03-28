@@ -160,12 +160,15 @@ def like_post(request):
         new_like.save()
         post.no_of_likes = post.no_of_likes+1
         post.save()
-        return JsonResponse({'success': True, 'new_like_count': post.no_of_likes, 'liked': True})
+        # return JsonResponse({'success': True, 'new_like_count': post.no_of_likes, 'liked': True})
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
     else:
         like_filter.delete()
         post.no_of_likes = post.no_of_likes-1
         post.save()
-        return JsonResponse({'success': True, 'new_like_count': post.no_of_likes, 'liked': False})
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+
 
 @login_required(login_url='signin')
 def profile(request, pk):
