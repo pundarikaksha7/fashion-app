@@ -1,4 +1,6 @@
-# Fashion - App 👗✨
+
+
+# Fashion App
 
 ## Overview
 
@@ -18,132 +20,36 @@ This full-stack application is built with a Django backend and will feature a Re
 ## 🚀 Tech Stack
 
 ### Backend
-	•	Django – Web framework for scalable backend development
-	•	Django REST Framework – API development
-	•	PostgreSQL/MySQL – Database management
-	•	Redis & Celery (Future) – For task queuing and caching
 
-### Frontend (To Be Developed)
-	•	React.js – Component-based UI
-	•	Redux – State management
-	•	TailwindCSS / Material-UI – Styling framework
+1. Backend framework would be consistent with the current state.
+2. Django framework has been used.
+3. Features would be added.
+# 🚀 Vite + React Project Setup & Run Instructions
+
+## 📥 Getting Started
+
+Follow these steps to install and run your Vite-based React project locally.
+
+### 📂 Clone the Repository
+First, clone the repository and navigate into the project folder:
+```sh
+git clone https://github.com/pundarikaksha7/fashion-app.git.
+```
+#Change the directory:```cd fashion-app```
 
 
-## 🛠️ Installation & Setup
+Then: ```cd templates```
 
-### Prerequisites
-
-Ensure you have the following installed:
-	•	Python (≥3.8)
-	•	Node.js & npm (for frontend development)
-	•	Virtual Environment (venv or conda recommended)
-	•	PostgreSQL/MySQL (for production setup)
-
-### Steps
-
-1️⃣ Clone the repository
-
-```shell
-git clone https://github.com/pundarikaksha7/fashion-app.git
+1)Install Dependencies:
+   ```
+   npm install
 ```
 
-```shell
-cd fashion-app
-```
-
-2️⃣ Create and activate a virtual environment
-
-```shell 
-python3 -m venv venv
-```
-
-```shell
-source venv/bin/activate
-```  
-
-On Windows: 
-```shell 
-venv\Scripts\activate
-```
-
-3️⃣ Install dependencies
-
-```shell
-pip install -r requirements.txt
-```
-
-4️⃣ Apply database migrations
-
-```shell
-python3 manage.py migrate
-```
-
-5️⃣ Run the development server
-
-```shell
-python3 manage.py runserver
-```
-
-The app will be available at http://127.0.0.1:8000/
-
-
-## 🔮 Features (Upcoming & In Progress)
-
-### 🎨 Frontend (Upcoming)
-
-✅ Responsive & modern UI using React.js
-
-✅ User profiles & feeds
-
-✅ Explore trending outfits
-
-✅ AI-powered outfit recommendations (future roadmap)
-
-### 🛠 Backend (Implemented & Planned)
-
-✅ Django-based RESTful API
-
-✅ User authentication (JWT-based login)
-
-✅ Outfit uploading & image handling
-
-✅ Social engagement (likes, comments, follows)
-
-✅ AI-based virtual try-on feature (future roadmap)
+    
 
 
 
-## 📜 Contribution Guidelines
-
-We welcome contributions! Please follow these steps:
-
-1️⃣ Fork the repository
-2️⃣ Create a feature branch:
-
-```shell
-git checkout -b feature-name
-```
-
-3️⃣ Commit and push changes:
-
-```shell
-git commit -m "Added new feature"
-```
-
-```shell
-git push origin feature-name
-```
-
-4️⃣ Create a pull request 🚀
-
-
-## 📬 Contact & Support
-
-For discussions, issues, or collaboration opportunities, reach out via:
-
-📩 Email: pundarikakshamohanty@gmail.com
-
-📢 Linkedin: linkedin.com/in/pundarikaksha7
-
-🌐 Website: [Coming Soon]
-
+2) Start the Development Server:
+ ```
+  npm run dev
+  ```
