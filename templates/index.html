@@ -267,6 +267,7 @@
                                 </a>
                             </div>
 
+<<<<<<< HEAD
                             <!-- post caption -->
                             <p>
                                 <a href="/profile/{{post.user}}"><strong>{{post.user}}</strong></a> {{post.caption}}
@@ -302,6 +303,17 @@
                                 {% endif %}
                             </p>
 
+=======
+                        <!-- add comment form -->
+                        <form id="comment-form-{{ post.id }}" method="POST" data-post-id="{{ post.id }}">
+                            {% csrf_token %}
+                            <textarea name="comment_text" placeholder="Add a comment..." required></textarea>
+                            <button type="button" class="comment-btn" onclick="submitComment('{{ post.id }}')">Post Comment</button>
+                        </form>
+    
+                        <div class="created-time">
+                            Posted on {{post.created_at|date:"F d, Y"}}
+>>>>>>> d47560c2806129b64a50149265c12acd28f4d148
                         </div>
                     </div>
                     {% endfor %}
