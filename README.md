@@ -1,28 +1,26 @@
 
+
 # Fashion App
 
-Welcome to the repository. This is a Full Stack project implemented using Django backend technologies. It is a social media app which allows people to share their fashion outfits online, similar to Instagram and Pinterest. Users can view outfits of their friends, trending outfits and can follow influencers. It is to be developed as an online hub for fashion enthusiasts and fashion conscious people, who often cannot decide which outfits to wear on various occasions, people who like to view fashion trends etc.
+## Overview
 
-## Installation
+Fashion App is a modern social media platform for fashion enthusiasts, designed to help users share, explore, and get feedback on outfits. Inspired by Instagram and Pinterest, this platform fosters engagement by allowing users to:
 
-1. Clone the repository.
-   Open your terminal and write the following command:
-   
-           git clone "https://github.com/pundarikaksha7/fashion-app.git"
-3. Create a virtual environment. You can check the internet on how to create a virtual environment on your respective machines.
-4. Install the requirements:
-          ```pip install -r requirements.txt```
-6. Run the server by the following command:
-       ```python3 manage.py runserver```
+✅ Share their fashion outfits
 
-## Features yet
+✅ Follow influencers and friends
 
-### Frontend
-1. No frontend yet.
-2. This is a basic framework written using Django templates.
-3. Frontend to be created using React JS.
+✅ Discover trending styles
+
+✅ Get feedback on outfit choices
+
+This full-stack application is built with a Django backend and will feature a React.js frontend for a seamless user experience.
+
+
+## 🚀 Tech Stack
 
 ### Backend
+
 1. Backend framework would be consistent with the current state.
 2. Django framework has been used.
 3. Features would be added.
@@ -48,6 +46,7 @@ Then: ```cd templates```
 ```
 
     
+
 
 
 2) Start the Development Server:
