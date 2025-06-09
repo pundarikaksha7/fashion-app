@@ -42,7 +42,16 @@ class Post(models.Model):
             return '/media/profile_images/blank-profile-picture.png'
 
     
-
+class SavedPost(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_posts')
+    post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='saved_by')
+    saved_at = models.DateTimeField(auto_now_add=True)
+    class Meta:
+        unique_together = ('user', 'post')
+        ordering = ['-saved_at']
+    def __str__(self):
+        return f"{self.user.username} saved post {self.post.id}"
+    
 class LikePost(models.Model):
     post_id = models.CharField(max_length=500)
     username = models.CharField(max_length=100)

@@ -4,7 +4,7 @@
 
 {% block content %}
 <div class="max-w-md mx-auto bg-white p-12 rounded-3xl shadow-lg space-y-10 select-none">
-  <h1 class="text-5xl font-extrabold text-center text-[#da334f]">Sign Up</h1>
+  <h1 class="text-5xl font-extrabold text-center text-[#ed9f0e]">Sign Up</h1>
   {% if messages %}
   <div class="text-red-600 text-center font-semibold space-y-3">
     {% for message in messages %}
@@ -14,12 +14,30 @@
   {% endif %}
   <form method="POST" class="space-y-8" novalidate>
     {% csrf_token %}
-    <input type="text" name="username" placeholder="Username" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#da334f]" />
-    <input type="email" name="email" placeholder="Email" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#da334f]" />
-    <input type="password" name="password" placeholder="Password" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#da334f]" />
-    <input type="password" name="password2" placeholder="Confirm Password" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#da334f]" />
-    <button type="submit" class="w-full bg-[#da334f] py-4 rounded-xl text-white font-bold text-xl hover:bg-[#b82b42] transition shadow-md select-none">Sign Up</button>
+    <input type="text" name="username" placeholder="Username" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+    <input type="email" name="email" placeholder="Email" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+
+    <!-- Age -->
+<input type="number" name="age" placeholder="Age" required
+class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+
+<!-- Gender -->
+<select name="gender" required
+class="w-full mt-4 rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]">
+<option value="" disabled selected>Select Gender</option>
+<option value="male">Male</option>
+<option value="female">Female</option>
+<option value="other">Other</option>
+<option value="prefer_not_to_say">Prefer not to say</option>
+</select>
+
+<!-- Location (optional) -->
+<input type="text" name="location" placeholder="City / Country"
+class="w-full mt-4 rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+    <input type="password" name="password" placeholder="Password" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+    <input type="password" name="password2" placeholder="Confirm Password" required class="w-full rounded-xl border border-gray-300 px-5 py-4 text-lg font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+    <button type="submit" class="w-full bg-[#ed9f0e] py-4 rounded-xl text-white font-bold text-xl hover:bg-[#ed9f0e] transition shadow-md select-none">Sign Up</button>
   </form>
-  <p class="text-center text-gray-600">Already have an account? <a href="{% url 'signin' %}" class="text-[#da334f] hover:underline font-semibold">Log In</a></p>
+  <p class="text-center text-gray-600">Already have an account? <a href="{% url 'signin' %}" class="text-[#ed9f0e] hover:underline font-semibold">Log In</a></p>
 </div>
 {% endblock %}

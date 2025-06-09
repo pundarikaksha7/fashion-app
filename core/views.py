@@ -10,15 +10,35 @@ import random
 from django.core.files.base import ContentFile
 import base64
 import uuid 
-
-
-# Create your views here.
-
-# Add comment view
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest
 from .models import Post, Comment
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from .models import Post, SavedPost
+
+@login_required(login_url='signin')
+def toggle_save_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    saved_post, created = SavedPost.objects.get_or_create(user=request.user, post=post)
+    if not created:
+        saved_post.delete()
+        messages.success(request, 'Post removed from saved posts.')
+    else:
+        messages.success(request, 'Post saved.')
+    return redirect(request.META.get('HTTP_REFERER', 'index'))
+
+@login_required(login_url='signin')
+def saved_posts_view(request):
+    saved_posts = Post.objects.filter(saved_by__user=request.user).order_by('-saved_by__saved_at')
+    context = {
+        'posts': saved_posts,
+        'user': request.user,
+    }
+    return render(request, 'saved.html', context)
+
 
 @login_required(login_url='signin')
 def add_comment(request,post_id):
@@ -144,6 +164,15 @@ def upload(request):
             messages.error(request, 'No media file provided.')
             return render(request, 'upload.html')
     return render(request, 'upload.html')
+
+@login_required(login_url='signin')
+def for_you_view(request):
+    all_posts = Post.objects.exclude(user=request.user.username).order_by('-created_at')  # latest posts first
+    context = {
+        'posts': all_posts,
+        'user': request.user,
+    }
+    return render(request, 'for_you.html', context)
 
 @login_required(login_url='signin')
 def search(request):

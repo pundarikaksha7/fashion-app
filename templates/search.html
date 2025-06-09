@@ -7,17 +7,17 @@
 
 <form action="{% url 'search' %}" method="POST" class="max-w-3xl mx-auto flex gap-4 shadow-md rounded-3xl p-6 mb-16 bg-white" novalidate>
   {% csrf_token %}
-  <input type="text" name="username" placeholder="Enter username..." required autocomplete="off" class="flex-grow rounded-3xl border border-gray-300 px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#da334f]" />
-  <button type="submit" class="bg-[#da334f] text-white rounded-3xl px-8 py-4 font-semibold text-lg hover:bg-[#b82b42] transition shadow-lg">Search</button>
+  <input type="text" name="username" placeholder="Enter username..." required autocomplete="off" class="flex-grow rounded-3xl border border-gray-300 px-6 py-4 text-lg focus:outline-none focus:ring-2 focus:ring-[#ed9f0e]" />
+  <button type="submit" class="bg-[#ed9f0e] text-white rounded-3xl px-8 py-4 font-semibold text-lg hover:bg-[#ed9f0e] transition shadow-lg">Search</button>
 </form>
 
 {% if username_profile_list %}
 <section class="max-w-5xl mx-auto space-y-10">
   {% for user in username_profile_list %}
   <a href="/profile/{{ user.user }}" class="flex items-center gap-8 p-6 bg-white rounded-3xl shadow-md hover:shadow-xl transition-shadow duration-300 cursor-pointer select-none" tabindex="0">
-    <img src="{{ user.profileimg.url }}" alt="{{ user.user }} avatar" class="w-20 h-20 rounded-full border-4 border-[#da334f] object-cover" />
+    <img src="{{ user.profileimg.url }}" alt="{{ user.user }} avatar" class="w-20 h-20 rounded-full border-4 border-[#ed9f0e] object-cover" />
     <div>
-      <h2 class="text-3xl font-semibold text-[#da334f]">@{{ user.user }}</h2>
+      <h2 class="text-3xl font-semibold text-[#ed9f0e]">@{{ user.user }}</h2>
       <p class="text-gray-600 mt-1">{{ user.location }}</p>
       <p class="text-gray-700 max-w-xl truncate mt-2">{{ user.bio }}</p>
     </div>
