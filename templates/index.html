@@ -79,22 +79,23 @@
       <!-- Your current feed content here -->
     </section>
   
-    <!-- Suggestions Box (Fixed and Right-Aligned) -->
-    <aside class="hidden lg:block fixed top-28 right-10 w-80 rounded-xl shadow-md bg-white p-6 select-none z-40">
-      <h2 class="text-2xl font-semibold mb-6">Suggestions to Follow</h2>
-      <ul role="list" class="space-y-5">
-        {% for suggestion in suggestions_username_profile_list %}
-        <li class="flex items-center justify-between">
-          <a href="/profile/{{ suggestion.user }}" class="flex items-center gap-4 hover:bg-gray-50 rounded-md p-2 transition" tabindex="0">
-            <img src="{{ suggestion.profileimg.url }}" alt="Avatar of {{ suggestion.user }}" class="w-12 h-12 rounded-full border-4 border-[#ed9f0e] object-cover select-none" />
-            <span class="text-[#ed9f0e] font-semibold">@{{ suggestion.user }}</span>
-          </a>
-        </li>
-        {% empty %}
-        <li class="text-gray-400">No suggestions available.</li>
-        {% endfor %}
-      </ul>
-    </aside>
+    <!-- Suggestions Box (Responsive Horizontal Scroll on Desktop) -->
+  <aside aria-label="Suggestions to Follow"
+  class="lg:order-1 lg:flex lg:flex-col lg:w-80 rounded-xl shadow-md bg-white p-6 select-none mb-12 lg:mb-0">
+<h2 class="text-2xl font-semibold mb-6">Suggestions to Follow</h2>
+<ul role="list" class="flex lg:flex-col space-x-4 lg:space-x-0 lg:space-y-5 overflow-x-auto scrollbar-hide">
+{% for suggestion in suggestions_username_profile_list %}
+<li class="flex items-center justify-start lg:justify-between min-w-[140px] lg:min-w-full hover:bg-gray-50 rounded-md p-2 transition cursor-pointer">
+ <a href="/profile/{{ suggestion.user }}" class="flex items-center gap-4" tabindex="0">
+   <img src="{{ suggestion.profileimg.url }}" alt="Avatar of {{ suggestion.user }}" class="w-12 h-12 rounded-full border-4 border-[#ed9f0e] object-cover select-none" />
+   <span class="text-[#ed9f0e] font-semibold truncate max-w-[140px] lg:max-w-full">@{{ suggestion.user }}</span>
+ </a>
+</li>
+{% empty %}
+<li class="text-gray-400 select-none">No suggestions available.</li>
+{% endfor %}
+</ul>
+</aside>
   </div>
   
 </section>

@@ -14,30 +14,6 @@ from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest
 from .models import Post, Comment
-from django.shortcuts import get_object_or_404, redirect
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from .models import Post, SavedPost
-
-@login_required(login_url='signin')
-def toggle_save_post(request, post_id):
-    post = get_object_or_404(Post, id=post_id)
-    saved_post, created = SavedPost.objects.get_or_create(user=request.user, post=post)
-    if not created:
-        saved_post.delete()
-        messages.success(request, 'Post removed from saved posts.')
-    else:
-        messages.success(request, 'Post saved.')
-    return redirect(request.META.get('HTTP_REFERER', 'index'))
-
-@login_required(login_url='signin')
-def saved_posts_view(request):
-    saved_posts = Post.objects.filter(saved_by__user=request.user).order_by('-saved_by__saved_at')
-    context = {
-        'posts': saved_posts,
-        'user': request.user,
-    }
-    return render(request, 'saved.html', context)
 
 
 @login_required(login_url='signin')
@@ -167,12 +143,20 @@ def upload(request):
 
 @login_required(login_url='signin')
 def for_you_view(request):
-    all_posts = Post.objects.exclude(user=request.user.username).order_by('-created_at')  # latest posts first
-    context = {
-        'posts': all_posts,
-        'user': request.user,
-    }
-    return render(request, 'for_you.html', context)
+    user_object = User.objects.get(username=request.user.username)
+    user_profile = Profile.objects.get(user=user_object)
+
+    all_posts = Post.objects.exclude(user=user_profile).order_by('-created_at')  # or whatever your logic is
+
+    for post in all_posts:
+        liked_users = LikePost.objects.filter(post_id=post.id).values_list('username', flat=True)
+        post.liked_by = list(liked_users)
+        post.is_liked_by_user = request.user.username in post.liked_by
+
+    return render(request, 'for_you.html', {
+        'user_profile': user_profile,
+        'posts': all_posts
+    })
 
 @login_required(login_url='signin')
 def search(request):
