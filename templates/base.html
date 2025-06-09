@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}FashionGram{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>  <style>
+    /* Subtle custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: #da334f;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: #b82b42;
+    }
+  </style>
+</head>
+<body class="bg-white text-gray-700 font-sans min-h-screen flex flex-col">
+  <header class="sticky top-0 bg-white bg-opacity-90 backdrop-blur-md border-b border-gray-200 shadow-sm z-50">
+    <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-6 select-none gap-6">
+      <a href="{% url 'index' %}" class="text-3xl font-extrabold text-[#da334f]" aria-label="FashionGram Home">FashionGram</a>
+      <form action="{% url 'search' %}" method="POST" role="search" class="flex flex-grow max-w-md">
+        {% csrf_token %}
+        <label for="header-search" class="sr-only">Search users</label>
+        <input
+          id="header-search"
+          name="username"
+          type="search"
+          placeholder="Search users..."
+          required
+          autocomplete="off"
+          class="w-full rounded-l-3xl border border-gray-300 px-5 py-2 text-gray-700 font-medium placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#da334f] focus:border-[#da334f] transition"
+          aria-label="Search users by username"
+        />
+        <button type="submit" aria-label="Search" class="bg-[#da334f] rounded-r-3xl px-5 py-2 text-white font-semibold hover:bg-[#b82b42] focus:outline-none focus:ring-2 focus:ring-[#b82b42] transition select-none">
+          🔍
+        </button>
+      </form>
+      <nav aria-label="Primary Navigation" class="flex space-x-8 text-gray-600 text-lg font-semibold whitespace-nowrap">
+        {% if user.is_authenticated %}
+        <a href="{% url 'upload' %}" class="fixed bottom-2 right-6 z-50 w-12 h-12 rounded-full bg-[#da334f] text-white flex items-center justify-center shadow-xl hover:bg-[#b3253d] transition duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+          </a>          <a href="{% url 'index' %}" class="hover:text-[#b82b42] transition">Home</a>
+          <!-- Removed Search link per request -->
+          <a href="{% url 'profile' user.username %}" class="hover:text-[#b82b42] transition">Profile</a>
+          <a href="{% url 'settings' %}" class="hover:text-[#b82b42] transition">Settings</a>
+          <a href="{% url 'logout' %}" class="hover:text-[#b82b42] transition">Logout</a>
+        {% else %}
+          <a href="{% url 'signin' %}" class="hover:text-[#b82b42] transition">Sign In</a>
+          <a href="{% url 'signup' %}" class="hover:text-[#b82b42] transition">Sign Up</a>
+        {% endif %}
+      </nav>
+    </div>
+  </header>
+
+  <main role="main" class="flex-grow max-w-7xl mx-auto px-6 py-14 md:py-20 w-full">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="border-t border-gray-200 py-6 text-center text-gray-400 text-sm select-none">
+    &copy; 2024 FashionGram. All rights reserved.
+  </footer>
+</body>
+</html>

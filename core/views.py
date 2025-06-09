@@ -7,6 +7,10 @@ from django.http import JsonResponse
 from .models import Profile, Post, LikePost, FollowersCount, Comment
 from itertools import chain
 import random
+from django.core.files.base import ContentFile
+import base64
+import uuid 
+
 
 # Create your views here.
 
@@ -55,6 +59,10 @@ def index(request):
 
     feed_list = list(chain(*feed))
 
+    for post in feed_list:
+        post.liked_by = list(LikePost.objects.filter(post_id=post.id).values_list('username', flat=True))
+
+
     #  # Add comments to each post
     # for post in feed_list:
     #     post.comments = Comment.objects.filter(post=post)
@@ -87,20 +95,55 @@ def index(request):
 
     return render(request, 'index.html', {'user_profile': user_profile, 'posts':feed_list, 'suggestions_username_profile_list': suggestions_username_profile_list[:4]})
 
+# @login_required(login_url='signin')
+# def upload(request):
+
+#     if request.method == 'POST':
+#         user = request.user.username
+#         image = request.FILES.get('image_upload')
+#         caption = request.POST['caption']
+
+#         new_post = Post.objects.create(user=user, image=image, caption=caption)
+#         new_post.save()
+
+#         return redirect('/')
+#     else:
+#         return redirect('/')
+
 @login_required(login_url='signin')
 def upload(request):
-
     if request.method == 'POST':
-        user = request.user.username
-        image = request.FILES.get('image_upload')
-        caption = request.POST['caption']
-
-        new_post = Post.objects.create(user=user, image=image, caption=caption)
-        new_post.save()
-
-        return redirect('/')
-    else:
-        return redirect('/')
+        media_file = request.FILES.get('media')
+        cropped_image_data = request.POST.get('cropped_image_data')
+        if cropped_image_data:
+            # Data URL format: "data:image/png;base64,iVBORw0..."
+            format, imgstr = cropped_image_data.split(';base64,') 
+            ext = format.split('/')[-1]  # png, jpeg, etc.
+            data = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
+            caption = request.POST.get('caption', '')
+            new_post = Post.objects.create(user=request.user.username,
+                                           image=data,
+                                           caption=caption or '',
+                                           )
+            new_post.save()
+            messages.success(request, 'Image post created successfully.')
+            return redirect('index')
+        
+        elif media_file:
+            # For videos or images without cropping (or if user uploads video)
+            # Directly save the uploaded file as Post image field supports FileField.
+            caption = request.POST.get('caption', '')
+            new_post = Post.objects.create(user=request.user.username,
+                                           image=media_file,
+                                           caption=caption or '',
+                                           )
+            new_post.save()
+            messages.success(request, 'Post created successfully.')
+            return redirect('index')
+        else:
+            messages.error(request, 'No media file provided.')
+            return render(request, 'upload.html')
+    return render(request, 'upload.html')
 
 @login_required(login_url='signin')
 def search(request):
@@ -154,6 +197,10 @@ def profile(request, pk):
     user_profile = Profile.objects.get(user=user_object)
     user_posts = Post.objects.filter(user=pk)
     user_post_length = len(user_posts)
+
+    for post in user_posts:
+        post.liked_by = list(LikePost.objects.filter(post_id=post.id).values_list('username', flat=True))
+
 
      # Add comments to each post
     # for post in user_posts:

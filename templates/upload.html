@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}
+Post Image or Video - FashionGram
+{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white rounded-xl shadow-md p-8 pt-16">
+  <h1 class="text-4xl font-extrabold mb-6 text-gray-900 select-none">Create New Post</h1>
+
+  <form method="POST" enctype="multipart/form-data" id="postForm" class="space-y-6">
+    {% csrf_token %}
+    <div>
+      <label for="mediaInput" class="block mb-2 font-semibold text-gray-800 select-none">Select image or video to upload</label>
+      <input
+        type="file"
+        id="mediaInput"
+        name="media"
+        accept="image/*,video/*"
+        required
+        class="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#da334f]"
+        aria-describedby="mediaHelp"
+      />
+      <p id="mediaHelp" class="text-gray-500 mt-1 text-sm select-none">
+        Images allow cropping; videos will be uploaded as-is.
+      </p>
+    </div>
+
+    <div>
+      <label for="caption" class="block mb-2 font-semibold text-gray-800 select-none">Caption (optional)</label>
+      <textarea
+        id="caption"
+        name="caption"
+        rows="3"
+        placeholder="Write your caption here..."
+        class="w-full rounded-lg border border-gray-300 px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-[#da334f]"
+      ></textarea>
+    </div>
+
+    <div id="previewContainer" class="mt-6">
+      <!-- Image cropper or video preview will go here -->
+    </div>
+
+    <input type="hidden" name="cropped_image_data" id="croppedImageData" />
+
+    <button
+      type="submit"
+      class="bg-[#da334f] hover:bg-[#b82b42] text-white rounded-3xl px-8 py-3 font-semibold focus:outline-none focus:ring-2 focus:ring-[#b82b42] transition select-none"
+    >
+      Post
+    </button>
+  </form>
+</div>
+
+<!-- CropperJS assets -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const mediaInput = document.getElementById('mediaInput');
+    const previewContainer = document.getElementById('previewContainer');
+    const croppedImageDataInput = document.getElementById('croppedImageData');
+    const postForm = document.getElementById('postForm');
+    let cropper = null;
+    let currentMediaType = null;
+
+    mediaInput.addEventListener('change', function (event) {
+      croppedImageDataInput.value = ''; // reset cropped data
+      previewContainer.innerHTML = '';
+      if (cropper) {
+        cropper.destroy();
+        cropper = null;
+      }
+
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const fileType = file.type;
+
+      if (fileType.startsWith('image/')) {
+        currentMediaType = 'image';
+        const img = document.createElement('img');
+        img.style.maxWidth = '100%';
+        img.style.borderRadius = '0.75rem';
+        img.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+        previewContainer.appendChild(img);
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          img.src = e.target.result;
+          cropper = new Cropper(img, {
+            aspectRatio: NaN,
+            viewMode: 1,
+            movable: true,
+            zoomable: true,
+            scalable: true,
+            rotatable: false,
+            responsive: true,
+            background: true,
+          });
+        };
+        reader.readAsDataURL(file);
+
+      } else if (fileType.startsWith('video/')) {
+        currentMediaType = 'video';
+        const video = document.createElement('video');
+        video.controls = true;
+        video.src = URL.createObjectURL(file);
+        video.classList.add('rounded-lg', 'mt-2', 'max-w-full', 'max-h-96', 'shadow-md');
+        previewContainer.appendChild(video);
+
+      } else {
+        alert('Unsupported file type. Please select an image or video.');
+        mediaInput.value = '';
+      }
+    });
+
+    postForm.addEventListener('submit', function (event) {
+      if (currentMediaType === 'image' && cropper) {
+        event.preventDefault();
+        cropper.getCroppedCanvas().toBlob(function (blob) {
+          const reader = new FileReader();
+          reader.onloadend = function () {
+            croppedImageDataInput.value = reader.result;
+            postForm.submit();
+          };
+          reader.readAsDataURL(blob);
+        }, 'image/png');
+      }
+      // for video, submit form as usual
+    });
+  });
+</script>
+{% endblock %}
