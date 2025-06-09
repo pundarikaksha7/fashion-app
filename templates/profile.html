@@ -4,12 +4,13 @@
 {% block title %}Profile - {{ user_profile.user.username }}{% endblock %}
 
 {% block content %}
-<section class="max-w-5xl mx-auto space-y-10">
-  <header class="flex flex-col md:flex-row md:items-center md:justify-between gap-8 bg-white p-10 rounded-3xl shadow-lg select-none">
+<div class="max-w-[1200px] mx-auto px-6 pt-16 pb-20">
+  <section class="flex flex-col md:flex-row md:items-center md:justify-between gap-8 bg-white p-10 rounded-3xl shadow-lg select-none">
     <div class="flex items-center gap-8">
-      <img src="{{ user_profile.profileimg.url }}" alt="Profile image of {{ user_profile.user.username }}" class="w-40 h-40 rounded-full object-cover border-6 border-[#ed9f0e] shadow-md" />
-      <div>
-        <h1 class="text-5xl font-extrabold tracking-tight text-[#ed9f0e]">@{{ user_profile.user.username }}</h1>
+      <img src="{{ user_profile.profileimg.url }}" alt="Profile image of {{ user_profile.user.username }}"
+           class="w-40 h-40 rounded-full object-cover border-6 border-[#ed9f0e] shadow-md" />
+      <div class="max-w-[calc(100vw-320px)] md:max-w-none">
+        <h1 class="text-5xl font-extrabold tracking-tight text-[#ed9f0e] truncate">@{{ user_profile.user.username }}</h1>
         {% if user_profile.location %}
         <p class="flex items-center gap-2 mt-2 text-gray-600 text-lg font-medium">
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#6b7280" stroke-width="2" viewBox="0 0 24 24" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21C12 21 7 13.5 7 9a5 5 0 1 1 10 0c0 4.5-5 12-5 12z"/></svg>
@@ -17,24 +18,24 @@
         </p>
         {% endif %}
         {% if user != user_profile.user %}
-  <form action="{% url 'follow' %}" method="POST" class="mt-4 inline-block">
-    {% csrf_token %}
-    <input type="hidden" name="follower" value="{{ user.username }}">
-    <input type="hidden" name="user" value="{{ user_profile.user.username }}">
+          <form action="{% url 'follow' %}" method="POST" class="mt-4 inline-block">
+            {% csrf_token %}
+            <input type="hidden" name="follower" value="{{ user.username }}">
+            <input type="hidden" name="user" value="{{ user_profile.user.username }}">
 
-    {% if button_text == 'Unfollow' %}
-  <button type="submit" class="text-sm px-5 py-2 rounded-xl border border-[#ed9f0e] text-[#ed9f0e] hover:bg-[#ed9f0e] hover:text-white transition select-none">
-    <i class="fa fa-check mr-1"></i> Unfollow
-  </button>
-{% else %}
-  <button type="submit" class="text-sm px-5 py-2 rounded-xl bg-[#ed9f0e] text-white hover:bg-[#ed9f0e] transition select-none">
-    <i class="fa fa-plus mr-1"></i> Follow
-  </button>
-{% endif %}
-  </form>
-{% endif %}
-
-
+            {% if button_text == 'Unfollow' %}
+              <button type="submit"
+                      class="text-sm px-5 py-2 rounded-xl border border-[#ed9f0e] text-[#ed9f0e] hover:bg-[#ed9f0e] hover:text-white transition select-none">
+                <i class="fa fa-check mr-1"></i> Unfollow
+              </button>
+            {% else %}
+              <button type="submit"
+                      class="text-sm px-5 py-2 rounded-xl bg-[#ed9f0e] text-white hover:bg-[#ed9f0e] transition select-none">
+                <i class="fa fa-plus mr-1"></i> Follow
+              </button>
+            {% endif %}
+          </form>
+        {% endif %}
       </div>
     </div>
     <div class="flex justify-around md:justify-between gap-12 w-full max-w-md">
@@ -51,38 +52,81 @@
         <p class="uppercase text-xs text-gray-500 tracking-wide">Following</p>
       </div>
     </div>
-  </header>
+  </section>
 
-  <section class="bg-white p-8 rounded-3xl shadow-lg">
+  <section class="bg-white p-8 rounded-3xl shadow-lg mt-10">
     <h2 class="text-3xl font-semibold mb-6 select-none">About</h2>
     <p class="text-gray-700 leading-relaxed text-lg min-h-[80px]">{% if user_profile.bio %}{{ user_profile.bio }}{% else %}<em class="text-gray-400 italic">No bio available</em>{% endif %}</p>
   </section>
 
-  <section>
-    <h2 class="text-3xl font-semibold mb-8 select-none">Posts</h2>
-    {% if user_posts %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-      {% for post in user_posts %}
-      <article class="relative rounded-2xl overflow-hidden shadow-md cursor-pointer hover:shadow-xl transition-shadow duration-300 group">
-        <img src="{{ post.image.url }}" alt="Post Image by {{ post.user }}" class="w-full h-64 object-cover select-none" loading="lazy" />
-        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent text-white px-4 py-3 flex justify-between items-center text-sm font-semibold">
-          <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="h-6 w-6 text-red-500" viewBox="0 0 20 20">
-              <path d="M3.172 5.172a4 4 0 015.656 0L10 6.342l1.172-1.17a4 4 0 115.656 5.656L10 17.656l-6.828-6.828a4 4 0 010-5.656z"/>
-            </svg>
-            <span id="likes-count-grid-{{ post.id }}">{{ post.no_of_likes }}</span>
+  <section class="mt-14">
+    <h2 class="text-5xl font-extrabold mb-16 select-none leading-tight max-w-4xl">Posts</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10" aria-label="Profile posts feed" aria-live="polite" aria-relevant="additions">
+      {% for post in user_posts reversed %}
+      <article tabindex="0" aria-label="Outfit post by {{ post.user }}" class="bg-white rounded-2xl shadow-lg overflow-hidden flex flex-col cursor-pointer hover:shadow-xl focus:shadow-xl transition-shadow duration-300">
+        <a href="{{ post.image.url }}" tabindex="-1" aria-hidden="true" class="block overflow-hidden rounded-t-2xl">
+          {% if post.image.url|slice:"-4" == ".mov" %}
+          <video src="{{ post.image.url }}" alt="Outfit posted by {{ post.user }}" class="w-full h-[340px] object-cover select-none transition-transform duration-300 group-hover:scale-105" loading="lazy"></video>
+          {% else %}
+          <img src="{{ post.image.url }}" alt="Outfit posted by {{ post.user }}" class="w-full h-[340px] object-cover select-none transition-transform duration-300 group-hover:scale-105" loading="lazy" />
+          {% endif %}
+        </a>
+        <div class="p-5 flex flex-col flex-grow gap-4">
+          <div class="flex items-center gap-5">
+            <a href="/profile/{{ post.user }}" tabindex="0">
+              <img src="{{ post.profile_image }}" alt="{{ post.user }} avatar" class="w-12 h-12 rounded-full border-4 border-[#ed9f0e] object-cover select-none shadow-sm hover:scale-110 transition-transform duration-300" loading="lazy" />
+            </a>
+            <a href="/profile/{{ post.user }}" class="font-semibold text-[#ed9f0e] text-lg truncate max-w-[160px]" tabindex="0">@{{ post.user }}</a>
           </div>
-          <div class="flex items-center gap-2">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="#4dabf7" class="h-6 w-6" viewBox="0 0 24 24"><path d="M21 6h-2v9H7v2c0 0.55 0.45 1 1 1h9l4 4V7c0-0.55-0.45-1-1-1zM3 17l4-4H3v4z"/></svg>
-            <span id="comments-count-grid-{{ post.id }}">{{ post.comments.count }}</span>
+          <p class="text-gray-600 text-lg flex-grow leading-relaxed overflow-hidden max-h-[4.8em]">{{ post.caption }}</p>
+
+          <div class="flex gap-6 text-gray-500 text-base select-none">
+            <form method="GET" action="/like-post" class="inline">
+              <input type="hidden" name="post_id" value="{{ post.id }}">
+              <button type="submit" class="flex items-center gap-2 transition group {% if user.username in post.liked_by %}text-[#ed9f0e]{% else %}text-gray-500{% endif %}">
+                <svg xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 20 20"
+                     class="w-6 h-6"
+                     fill="{% if user.username in post.liked_by %}#ed9f0e{% else %}currentColor{% endif %}">
+                  <path d="M3.172 5.172a4 4 0 015.656 0L10 6.342l1.172-1.17a4 4 0 115.656 5.656L10 17.656l-6.828-6.828a4 4 0 010-5.656z"/>
+                </svg>
+                <span>
+                  {% if post.no_of_likes == 1 %}1 Like{% else %}{{ post.no_of_likes }} Likes{% endif %}
+                </span>
+              </button>
+            </form>
+            
+            <a href="{{ post.image.url }}" download class="flex items-center gap-2 hover:text-[#ed9f0e] transition" aria-label="Download image posted by {{ post.user }}">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" class="w-6 h-6">
+                <path d="M7.5 1.5A1.5 1.5 0 019 0h4a2 2 0 012 2v12a2 2 0 01-2 2H2a2 2 0 01-2-2V2a2 2 0 012-2h6c-.314.418-.5.937-.5 1.5v6h-2a.5.5 0 00-.354.854l2.5 2.5a.5.5 0 00.708 0l2.5-2.5A.5.5 0 008.5 7.5h-2v-6z"/>
+              </svg>
+              Download
+            </a>
           </div>
+
+          <section class="mt-5 max-h-44 overflow-y-auto space-y-3 border-t border-gray-100 pt-5" aria-label="Comments on the post">
+            {% for comment in post.comments.all %}
+              <article class="flex gap-4" id="comment-{{ comment.id }}">
+                <img src="{{ comment.profile_image }}" alt="{{ comment.user.username }} avatar" class="w-8 h-8 rounded-full border-4 border-[#ed9f0e] object-cover select-none" />
+                <div>
+                  <strong class="text-[#ed9f0e] font-semibold">{{ comment.user.username }}</strong>
+                  <p class="text-gray-600">{{ comment.text }}</p>
+                </div>
+              </article>
+            {% endfor %}
+          </section>
+
+          <form method="POST" action="{% url 'add-comment' post.id %}" class="mt-6 flex gap-3 items-center" aria-label="Add a comment">
+            {% csrf_token %}
+            <input name="comment_text" type="text" placeholder="Add a comment..." required autocomplete="off" class="flex-grow border border-gray-300 rounded-3xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-[#ed9f0e] text-lg" />
+            <button type="submit" class="bg-[#ed9f0e] text-white rounded-3xl px-6 py-3 font-semibold hover:bg-[#ed9f0e] transition text-lg">Post</button>
+          </form>
         </div>
       </article>
+      {% empty %}
+      <p class="text-center text-gray-400 mt-20 font-semibold select-none">No posts yet.</p>
       {% endfor %}
     </div>
-    {% else %}
-    <p class="text-center text-gray-400 font-semibold mt-20 select-none">No posts yet.</p>
-    {% endif %}
   </section>
-</section>
+</div>
 {% endblock %}
