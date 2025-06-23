@@ -13,7 +13,103 @@ import uuid
 from django.shortcuts import redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseBadRequest
-from .models import Post, Comment
+from .models import Post, Comment, SavedPost
+from django.http import JsonResponse
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from .models import Profile, Post, LikePost, FollowersCount, Comment, SavedPost, PostMedia
+from itertools import chain
+
+@login_required(login_url='signin')
+def api_posts(request):
+    posts = Post.objects.all().order_by('-created_at')
+    data = []
+    for post in posts:
+        data.append({
+            'id': post.id,
+            'title': post.caption[:30] or 'Untitled',
+            'caption': post.caption,
+            'image': post.image.url if post.image else '',
+            'username': post.user,
+        })
+    return JsonResponse(data, safe=False)
+
+@login_required(login_url='signin')
+def api_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    profile = get_object_or_404(Profile, user=user)
+    return JsonResponse({
+        'username': user.username,
+        'name': user.username,  # Replace with actual name if stored
+        'bio': profile.bio,
+        'location': profile.location,
+        'profileimg': profile.profileimg.url if profile.profileimg else '',
+    })
+
+@login_required(login_url='signin')
+def api_profile_posts(request, username):
+    posts = Post.objects.filter(user=username).order_by('-created_at')
+    data = []
+    for post in posts:
+        data.append({
+            'id': post.id,
+            'title': post.caption[:30] or 'Untitled',
+            'caption': post.caption,
+            'image': post.image.url if post.image else '',
+        })
+    return JsonResponse(data, safe=False)
+
+@login_required(login_url='signin')
+def api_saved_posts(request):
+    saved = SavedPost.objects.filter(user=request.user).order_by('-saved_at')
+    data = []
+    for entry in saved:
+        post = entry.post
+        data.append({
+            'id': post.id,
+            'title': post.caption[:30] or 'Untitled',
+            'caption': post.caption,
+            'image': post.image.url if post.image else '',
+        })
+    return JsonResponse(data, safe=False)
+
+@login_required(login_url='signin')
+def api_for_you(request):
+    all_posts = Post.objects.exclude(user=request.user.username).order_by('-created_at')
+    suggestions = []
+    for post in all_posts:
+        suggestions.append({
+            'id': post.id,
+            'text': f"Check out this post by {post.user}",
+        })
+    return JsonResponse(suggestions, safe=False)
+
+@login_required(login_url='signin')
+def api_search(request):
+    query = request.GET.get('q', '')
+    if not query:
+        return JsonResponse([], safe=False)
+
+    matched_users = User.objects.filter(username__icontains=query)
+    matched_posts = Post.objects.filter(caption__icontains=query)
+
+    results = []
+    for user in matched_users:
+        results.append({
+            'id': f'user-{user.id}',
+            'username': user.username
+        })
+    for post in matched_posts:
+        results.append({
+            'id': f'post-{post.id}',
+            'caption': post.caption,
+            'image': post.image.url if post.image else '',
+        })
+
+    return JsonResponse(results, safe=False)
+
+####################### API SECTION OVER ##########################
 
 
 @login_required(login_url='signin')
@@ -91,54 +187,35 @@ def index(request):
 
     return render(request, 'index.html', {'user_profile': user_profile, 'posts':feed_list, 'suggestions_username_profile_list': suggestions_username_profile_list[:4]})
 
-# @login_required(login_url='signin')
-# def upload(request):
-
-#     if request.method == 'POST':
-#         user = request.user.username
-#         image = request.FILES.get('image_upload')
-#         caption = request.POST['caption']
-
-#         new_post = Post.objects.create(user=user, image=image, caption=caption)
-#         new_post.save()
-
-#         return redirect('/')
-#     else:
-#         return redirect('/')
-
 @login_required(login_url='signin')
 def upload(request):
     if request.method == 'POST':
-        media_file = request.FILES.get('media')
-        cropped_image_data = request.POST.get('cropped_image_data')
-        if cropped_image_data:
-            # Data URL format: "data:image/png;base64,iVBORw0..."
-            format, imgstr = cropped_image_data.split(';base64,') 
-            ext = format.split('/')[-1]  # png, jpeg, etc.
-            data = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
-            caption = request.POST.get('caption', '')
-            new_post = Post.objects.create(user=request.user.username,
-                                           image=data,
-                                           caption=caption or '',
-                                           )
-            new_post.save()
-            messages.success(request, 'Image post created successfully.')
-            return redirect('index')
-        
-        elif media_file:
-            # For videos or images without cropping (or if user uploads video)
-            # Directly save the uploaded file as Post image field supports FileField.
-            caption = request.POST.get('caption', '')
-            new_post = Post.objects.create(user=request.user.username,
-                                           image=media_file,
-                                           caption=caption or '',
-                                           )
-            new_post.save()
-            messages.success(request, 'Post created successfully.')
-            return redirect('index')
-        else:
-            messages.error(request, 'No media file provided.')
+        caption = request.POST.get('caption', '')
+        cropped_data_list = request.POST.getlist('cropped_image_data')  # base64 images
+        media_files = request.FILES.getlist('media')  # uploaded files
+
+        if not cropped_data_list and not media_files:
+            messages.error(request, 'No media provided.')
             return render(request, 'upload.html')
+
+        post = Post.objects.create(user=request.user.username, caption=caption)
+
+        # Handle cropped base64 images
+        for cropped_data in cropped_data_list:
+            if cropped_data:
+                format, imgstr = cropped_data.split(';base64,') 
+                ext = format.split('/')[-1]
+                data = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
+                PostMedia.objects.create(post=post, file=data, is_image=True)
+
+        # Handle uploaded files
+        for file in media_files:
+            is_image = file.content_type.startswith('image')
+            PostMedia.objects.create(post=post, file=file, is_image=is_image)
+
+        messages.success(request, 'Post created successfully.')
+        return redirect('index')
+
     return render(request, 'upload.html')
 
 @login_required(login_url='signin')
@@ -343,3 +420,35 @@ def signin(request):
 def logout(request):
     auth.logout(request)
     return redirect('signin')
+
+
+@login_required(login_url='signin')
+def save_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+    user = request.user
+
+    # Check if the post is already saved
+    if SavedPost.objects.filter(user=user, post=post).exists():
+        SavedPost.objects.filter(user=user, post=post).delete() #Unsave post if already saved
+    else:
+        SavedPost.objects.create(user=user, post=post)
+
+    return redirect(request.META.get('HTTP_REFERER', '/'))  # Redirect to the previous page
+    
+@login_required(login_url='signin')
+def saved_posts_view(request):
+    user = request.user
+    saved_posts = SavedPost.objects.filter(user=user).order_by('-saved_at')
+        
+    # Fetch the actual Post objects from the SavedPost instances
+    posts = [saved_post.post for saved_post in saved_posts]
+
+    # Add liked_by attribute to each post (similar to index view)
+    for post in posts:
+        post.liked_by = list(LikePost.objects.filter(post_id=post.id).values_list('username', flat=True))
+
+    user_object = User.objects.get(username=request.user.username)
+    user_profile = Profile.objects.get(user=user_object)
+
+    return render(request, 'saved_posts.html', {'posts': posts, 'user_profile': user_profile})
+    

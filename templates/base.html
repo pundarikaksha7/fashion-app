@@ -23,6 +23,7 @@
   <header class="sticky top-0 bg-white bg-opacity-90 backdrop-blur-md border-b border-gray-200 shadow-sm z-50">
     <div class="max-w-7xl mx-auto flex items-center justify-between h-16 px-6 select-none gap-6">
       <a href="{% url 'index' %}" class="text-3xl font-extrabold text-[#ed9f0e]" aria-label="FashionGram Home">FashionGram</a>
+      {% if user.is_authenticated %}
       <form action="{% url 'search' %}" method="POST" role="search" class="flex flex-grow max-w-md">
         {% csrf_token %}
         <label for="header-search" class="sr-only">Search users</label>
@@ -40,6 +41,7 @@
           🔍
         </button>
       </form>
+      {% endif %}
       <nav aria-label="Primary Navigation" class="flex space-x-8 text-gray-600 text-lg font-semibold whitespace-nowrap">
         {% if user.is_authenticated %}
         <a href="{% url 'upload' %}" class="fixed bottom-2 right-6 z-50 w-12 h-12 rounded-full bg-[#ed9f0e] text-white flex items-center justify-center shadow-xl hover:bg-[#b3253d] transition duration-300">
@@ -48,6 +50,7 @@
             </svg>
           </a>          <a href="{% url 'index' %}" class="hover:text-[#ed9f0e] transition">Home</a>
           <!-- Removed Search link per request -->
+          <a href="{% url 'saved-posts' %}">Saved Posts</a>
           <a href="{% url 'for_you' %}" class="hover:text-[#ed9f0e] transition select-none font-semibold">For You</a>
           <a href="{% url 'profile' user.username %}" class="hover:text-[#ed9f0e] transition">Profile</a>
           <a href="{% url 'settings' %}" class="hover:text-[#ed9f0e] transition">Settings</a>

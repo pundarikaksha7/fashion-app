@@ -41,7 +41,17 @@
               </span>
             </button>
           </form>
-          
+          <form method="POST" action="{% url 'save-post' post.id %}" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="flex items-center gap-2 transition group text-[#ed9f0e]" aria-label="Remove save from this post">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                   fill="#ed9f0e" stroke="#ed9f0e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-6 h-6">
+                 <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z"/>
+               </svg>
+              <span>Unsave</span>
+            </button>
+          </form>
+        </div>
         <a href="{{ post.image.url }}" download class="flex items-center gap-2 hover:text-[#ed9f0e] transition" aria-label="Download image posted by {{ post.user }}">
          
           <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 16 16" class="w-6 h-6">

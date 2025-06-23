@@ -19,7 +19,7 @@ class Profile(models.Model):
 class Post(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.CharField(max_length=100)
-    image = models.FileField(upload_to='post_images')
+    # image = models.FileField(upload_to='post_images')
     caption = models.TextField()
     created_at = models.DateTimeField(default=datetime.now)
     no_of_likes = models.IntegerField(default=0)
@@ -40,7 +40,14 @@ class Post(models.Model):
                 return '/media/profile_images/blank-profile-picture.png'
         except User.DoesNotExist:
             return '/media/profile_images/blank-profile-picture.png'
+    @property
+    def saved_by(self):
+        return [saved_post.user for saved_post in self.saved_by.all()]
 
+class PostMedia(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='media_files')
+    file = models.FileField(upload_to='post_media')
+    is_image = models.BooleanField(default=True)  # True for image, False for video
     
 class SavedPost(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_posts')
