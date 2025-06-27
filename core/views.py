@@ -5,9 +5,41 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import get_object_or_404
-from .models import Profile, Post, LikePost, FollowersCount, Comment, SavedPost, PostMedia
+from .models import Profile, Post, LikePost, FollowersCount, Comment, SavedPost, PostMedia,DirectMessage
+from .serializers import DirectMessageSerializer
+from django.db.models import Q
 from django.core.files.base import ContentFile
 import base64, uuid
+
+
+# Send a message
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def send_message(request):
+    recipient_username = request.data.get('recipient')
+    message_text = request.data.get('message')
+
+    if not recipient_username or not message_text:
+        return Response({'error': 'Recipient and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    recipient = get_object_or_404(User, username=recipient_username)
+    message = DirectMessage.objects.create(sender=request.user, recipient=recipient, message=message_text)
+    serializer = DirectMessageSerializer(message)
+    return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+# Get chat history with a user
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_conversation(request, username):
+    other_user = get_object_or_404(User, username=username)
+
+    messages = DirectMessage.objects.filter(
+        (Q(sender=request.user) & Q(recipient=other_user)) |
+        (Q(sender=other_user) & Q(recipient=request.user))
+    ).order_by('timestamp')
+
+    serializer = DirectMessageSerializer(messages, many=True)
+    return Response(serializer.data)
 
 
 
@@ -157,6 +189,7 @@ def api_posts(request):
             'caption': post.caption,
             'media': [m.file.url for m in post.media_files.all()],
             'username': post.user,
+            'number of likes':post.no_of_likes
         } for post in posts
     ]
     return Response(data)
@@ -212,6 +245,7 @@ def api_for_you(request):
             'title': post.caption[:30] or 'Untitled',
             'caption': post.caption,
             'media': [m.file.url for m in post.media_files.all()],
+            'number of likes':post.no_of_likes
         } for post in all_posts
     ]
     return Response(suggestions)
