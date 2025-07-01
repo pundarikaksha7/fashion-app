@@ -6,6 +6,7 @@ from datetime import datetime
 User = get_user_model()
 
 
+
 class DirectMessage(models.Model):
     sender = models.ForeignKey(User, related_name='sent_messages', on_delete=models.CASCADE)
     recipient = models.ForeignKey(User, related_name='received_messages', on_delete=models.CASCADE)
@@ -34,6 +35,7 @@ class Post(models.Model):
     caption = models.TextField()
     created_at = models.DateTimeField(default=datetime.now)
     no_of_likes = models.IntegerField(default=0)
+    is_apparel = models.BooleanField(default=False)  # flag post relevance
     def __str__(self):
         return self.user
     @property
@@ -103,4 +105,11 @@ class Comment(models.Model):
             pass  # If profile does not exist or has no image
 
         return '/media/profile_images/blank-profile-picture.png'
+    
+# Apparel Classifier model
+class ApparelTag(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
+    image = models.ForeignKey(PostMedia, on_delete=models.CASCADE)
+    label = models.CharField(max_length=50)
+    confidence = models.FloatField()
 

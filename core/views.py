@@ -5,11 +5,19 @@ from rest_framework import status
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.shortcuts import get_object_or_404
-from .models import Profile, Post, LikePost, FollowersCount, Comment, SavedPost, PostMedia,DirectMessage
+from .models import Profile, Post, LikePost, FollowersCount, Comment, SavedPost, PostMedia,DirectMessage, ApparelTag
 from .serializers import DirectMessageSerializer
 from django.db.models import Q
 from django.core.files.base import ContentFile
-import base64, uuid
+import base64, uuid,os
+from ultralytics import YOLO
+import os
+
+# Load once globally to avoid reloading on every call
+APPAREL_DETECTOR_MODEL = YOLO("yolov8n-oiv7.pt")  # Change to custom model if needed
+
+from .ml import detect_apparel
+
 
 
 # Send a message
@@ -107,30 +115,123 @@ def api_follow(request):
     FollowersCount.objects.create(follower=follower, user=user)
     return Response({'message': 'Followed'})
 
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def api_upload(request):
+#     caption = request.data.get('caption', '')
+#     cropped_data_list = request.data.getlist('cropped_image_data')
+#     media_files = request.FILES.getlist('media')
+
+#     # if not cropped_data_list and not media_files:
+#     #     return Response({'error': 'No media provided.'}, status=status.HTTP_400_BAD_REQUEST)
+#     if not media_files:
+#         return Response({'error': 'No media provided.'}, status=status.HTTP_400_BAD_REQUEST)
+
+#     post = Post.objects.create(user=request.user.username, caption=caption)
+
+#     for cropped_data in cropped_data_list:
+#         if cropped_data:
+#             format, imgstr = cropped_data.split(';base64,')
+#             ext = format.split('/')[-1]
+#             data = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
+#             PostMedia.objects.create(post=post, file=data, is_image=True)
+
+#     for file in media_files:
+#         is_image = file.content_type.startswith('image')
+#         PostMedia.objects.create(post=post, file=file, is_image=is_image)
+
+#     # return Response({'message': 'Post created successfully.'})
+#     image_apparel_map = {}
+#     apparel_detected = False
+
+#     for media in post.media_files.all():
+#             labels = detect_apparel(media.file.path)  # YOLOv8 or any model
+            
+#             for label in labels:
+#                 image_apparel_map.setdefault(label, []).append(media.file.url)
+#                 ApparelTag.objects.create(post=post, image=media, label=label, confidence=label.confidence)
+            
+#             if labels:
+#                 apparel_detected = True
+
+#     # Update post relevance flag
+#     post.is_apparel = apparel_detected
+#     if apparel_detected:
+#         post.save()
+
+#     if not apparel_detected:
+#         return Response({
+#             'warning': 'No apparel detected in uploaded images.',
+#             'suggestion': 'You may want to edit your post to include fashion-related content.',
+#             'post_id': str(post.id)
+#         }, status=status.HTTP_202_ACCEPTED)
+
+#     return Response({
+#         'message': 'Post created and analyzed.',
+#         'apparel_map': image_apparel_map
+#     })
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def api_upload(request):
     caption = request.data.get('caption', '')
-    cropped_data_list = request.data.getlist('cropped_image_data')
     media_files = request.FILES.getlist('media')
 
-    if not cropped_data_list and not media_files:
+    print("FILES RECEIVED:", request.FILES)
+    print("MEDIA FILES:", media_files)
+
+    if not media_files:
         return Response({'error': 'No media provided.'}, status=status.HTTP_400_BAD_REQUEST)
 
+    # Create Post
     post = Post.objects.create(user=request.user.username, caption=caption)
 
-    for cropped_data in cropped_data_list:
-        if cropped_data:
-            format, imgstr = cropped_data.split(';base64,')
-            ext = format.split('/')[-1]
-            data = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
-            PostMedia.objects.create(post=post, file=data, is_image=True)
-
+    # Save uploaded media
     for file in media_files:
         is_image = file.content_type.startswith('image')
         PostMedia.objects.create(post=post, file=file, is_image=is_image)
 
-    return Response({'message': 'Post created successfully.'})
+    # Apparel detection
+    image_apparel_map = {}
+    apparel_detected = False
+
+    for media in post.media_files.all():
+        if not media.is_image:
+            continue
+
+        file_path = media.file.path
+        if not os.path.isfile(file_path):
+            continue
+
+        labels = detect_apparel(file_path,APPAREL_DETECTOR_MODEL)  # your AI model
+
+        for result in labels:
+            label = result['label']
+            confidence = result.get('confidence', 0)
+            print("CONFIDENCE",confidence)
+            image_apparel_map.setdefault(label, []).append(media.file.url)
+            ApparelTag.objects.create(post=post, image=media, label=label, confidence=confidence)
+
+        if labels:
+            apparel_detected = True
+
+    # Update post flag
+    post.is_apparel = apparel_detected
+    post.save()
+
+    if not apparel_detected:
+        return Response({
+            'warning': 'No apparel detected in uploaded images.',
+            'suggestion': 'You may want to edit your post to include fashion-related content.',
+            'post_id': str(post.id),
+            'apparel_map':image_apparel_map
+        }, status=status.HTTP_202_ACCEPTED)
+
+    return Response({
+        'message': 'Post created and analyzed.',
+        'post_id': str(post.id),
+        'apparel_map': image_apparel_map
+    }, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
