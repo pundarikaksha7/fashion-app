@@ -15,8 +15,7 @@ import os
 
 # Load once globally to avoid reloading on every call
 APPAREL_DETECTOR_MODEL = YOLO("yolov8n-oiv7.pt")  # Change to custom model if needed
-
-from .ml import detect_apparel
+from .ml import detect_apparel,is_obscene
 
 
 
@@ -191,6 +190,16 @@ def api_upload(request):
         is_image = file.content_type.startswith('image')
         PostMedia.objects.create(post=post, file=file, is_image=is_image)
 
+         # Obscenity check
+        if is_image and is_obscene(file):
+            post.delete()
+            return Response({
+                'error': 'Obscene content detected. Post rejected.',
+                'details': f'Objectionable image: {file.name}'
+            }, status=status.HTTP_403_FORBIDDEN)
+        else:
+            print("No obscene content detected")
+
     # Apparel detection
     image_apparel_map = {}
     apparel_detected = False
@@ -351,23 +360,57 @@ def api_for_you(request):
     ]
     return Response(suggestions)
 
+# @api_view(['GET'])
+# @permission_classes([IsAuthenticated])
+# def api_search(request):
+#     query = request.GET.get('q', '')
+#     if not query:
+#         return Response([])
+
+#     matched_users = User.objects.filter(username__icontains=query)
+#     matched_posts = Post.objects.filter(caption__icontains=query)
+
+#     results = [
+#         {'id': f'user-{user.id}', 'username': user.username} for user in matched_users
+#     ] + [
+#         {
+#             'id': f'post-{post.id}',
+#             'caption': post.caption,
+#             'media': [m.file.url for m in post.media_files.all()],
+#         } for post in matched_posts
+#     ]
+#     return Response(results)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_search(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').lower().strip()
     if not query:
         return Response([])
 
     matched_users = User.objects.filter(username__icontains=query)
-    matched_posts = Post.objects.filter(caption__icontains=query)
 
-    results = [
-        {'id': f'user-{user.id}', 'username': user.username} for user in matched_users
-    ] + [
-        {
-            'id': f'post-{post.id}',
-            'caption': post.caption,
-            'media': [m.file.url for m in post.media_files.all()],
-        } for post in matched_posts
-    ]
+    # Match posts by apparel label
+    matched_tags = ApparelTag.objects.filter(label__icontains=query).select_related('post', 'image')
+    matched_posts_dict = {}
+
+    for tag in matched_tags:
+        post = tag.post
+        if post.id not in matched_posts_dict:
+            matched_posts_dict[post.id] = {
+                'id': f'post-{post.id}',
+                'caption': post.caption,
+                'media': [m.file.url for m in post.media_files.all()],
+                'username': post.user,
+                'matched_label': tag.label
+            }
+
+    results = {
+        'users': [
+            {'id': f'user-{user.id}', 'username': user.username}
+            for user in matched_users
+        ],
+        'posts': list(matched_posts_dict.values())
+    }
+
     return Response(results)
