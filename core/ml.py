@@ -41,7 +41,7 @@ def detect_apparel(image_path, model):
         'Trousers'
     }
 
-    CONFIDENCE_THRESHOLD = 0.35
+    CONFIDENCE_THRESHOLD = 0.25
 
     if not os.path.exists(image_path):
         print("ERROR: Image not found:", image_path)

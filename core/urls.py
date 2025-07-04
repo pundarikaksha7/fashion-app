@@ -10,7 +10,6 @@ urlpatterns = [
     path('api/signin/', views.api_signin, name='api-signin'),
     path('api/logout/', views.api_logout, name='api-logout'),
 
-    # Example: include all other API endpoints here
     path('api/posts/', views.api_posts, name='api-posts'),
     path('api/profile/<str:username>/', views.api_profile, name='api-profile'),
     path('api/profile/<str:username>/posts/', views.api_profile_posts, name='api-profile-posts'),
@@ -25,4 +24,6 @@ urlpatterns = [
     path('api/upload/', views.api_upload, name='api-upload'),
     path('api/messages/send/', views.send_message),
     path('api/messages/<str:username>/', views.get_conversation),
+    path('api/post/delete/<uuid:post_id>/', views.delete_post, name='delete_post'),
+    path('api/comment/delete/<int:comment_id>/', views.delete_comment, name='delete_comment')
 ]

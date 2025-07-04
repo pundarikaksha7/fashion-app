@@ -414,3 +414,25 @@ def api_search(request):
     }
 
     return Response(results)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_post(request, post_id):
+    post = get_object_or_404(Post, id=post_id)
+
+    if post.user != request.user.username:
+        return Response({'error': 'You are not allowed to delete this post.'}, status=status.HTTP_403_FORBIDDEN)
+
+    post.delete()
+    return Response({'message': 'Post deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+
+    if comment.user != request.user:
+        return Response({'error': 'You are not allowed to delete this comment.'}, status=status.HTTP_403_FORBIDDEN)
+
+    comment.delete()
+    return Response({'message': 'Comment deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
