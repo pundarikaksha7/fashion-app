@@ -12,6 +12,7 @@ from django.core.files.base import ContentFile
 import base64, uuid,os
 from ultralytics import YOLO
 import os
+from collections import Counter 
 
 # Load once globally to avoid reloading on every call
 APPAREL_DETECTOR_MODEL = YOLO("yolov8n-oiv7.pt")  # Change to custom model if needed
@@ -212,7 +213,7 @@ def api_upload(request):
         if not os.path.isfile(file_path):
             continue
 
-        labels = detect_apparel(file_path,APPAREL_DETECTOR_MODEL)  # your AI model
+        labels = detect_apparel(file_path,APPAREL_DETECTOR_MODEL)  #  AI model
 
         for result in labels:
             label = result['label']
@@ -398,7 +399,7 @@ def api_search(request):
         post = tag.post
         if post.id not in matched_posts_dict:
             matched_posts_dict[post.id] = {
-                'id': f'post-{post.id}',
+                'id': f'{post.id}',
                 'caption': post.caption,
                 'media': [m.file.url for m in post.media_files.all()],
                 'username': post.user,
@@ -436,3 +437,46 @@ def delete_comment(request, comment_id):
 
     comment.delete()
     return Response({'message': 'Comment deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def api_recommended_posts(request, post_id):
+    try:
+        source_post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({'error': 'Post not found.'}, status=404)
+
+    # Get all apparel tags associated with the given post
+    tags = ApparelTag.objects.filter(post=source_post).values_list('label', flat=True)
+
+    if not tags:
+        return Response({'message': 'No apparel tags found for this post.'}, status=200)
+
+    # Find other posts with the same tags
+    similar_tags_posts = ApparelTag.objects.filter(label__in=tags).exclude(post=source_post)
+
+    # Count how many tags each other post shares
+    post_scores = Counter()
+    for tag in similar_tags_posts:
+        post_scores[tag.post_id] += 1
+
+    # Sort by number of matching tags
+    recommended_post_ids = [post_id for post_id, _ in post_scores.most_common(5)]
+
+    # Fetch the recommended Post objects
+    recommended_posts = Post.objects.filter(id__in=recommended_post_ids)
+
+    data = []
+    for post in recommended_posts:
+        data.append({
+            'id': str(post.id),
+            'caption': post.caption,
+            'media': [media.file.url for media in post.media_files.all()],
+            'matched_tags': [t.label for t in ApparelTag.objects.filter(post=post, label__in=tags)],
+        })
+
+    return Response({
+        'source_post': str(source_post.id),
+        'matched_labels': list(tags),
+        'recommendations': data
+    })

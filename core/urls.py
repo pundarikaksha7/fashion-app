@@ -22,6 +22,7 @@ urlpatterns = [
     path('api/follow/', views.api_follow, name='api-follow'),
     path('api/settings/', views.api_settings, name='api-settings'),
     path('api/upload/', views.api_upload, name='api-upload'),
+    path('api/recommend/<uuid:post_id>/', views.api_recommended_posts),
     path('api/messages/send/', views.send_message),
     path('api/messages/<str:username>/', views.get_conversation),
     path('api/post/delete/<uuid:post_id>/', views.delete_post, name='delete_post'),
