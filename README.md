@@ -1,8 +1,8 @@
-# Drip.com
+# Rack.com
 
 ## Overview
 
-**Drip** is a modern social media platform built exclusively for **fashion lovers, creators, and trend followers**. Inspired by the intuitive interfaces of Instagram and Pinterest, this app blends **user-driven fashion sharing** with **cutting-edge AI** to revolutionize how we engage with style online.
+**Rack** is a modern social media platform built exclusively for **fashion lovers, creators, and trend followers**. Inspired by the intuitive interfaces of Instagram and Pinterest, this app blends **user-driven fashion sharing** with **cutting-edge AI** to revolutionize how we engage with style online.
 
 Whether you’re planning your party look, checking out campus trends, or building an influencer following — Fashion App helps you **post, vote, recommend, and analyze outfits** in an intelligent, social-first environment.
 
@@ -38,7 +38,7 @@ Whether you’re planning your party look, checking out campus trends, or buildi
 
 ## **🤖 AI-Powered Features**
 
-Drip is not just about social sharing. It uses AI to **analyze fashion** and enhance recommendations.
+Rack is not just about social sharing. It uses AI to **analyze fashion** and enhance recommendations.
 
 ### **🧠 Apparel Detection (YOLOv8 + Post-processing)**
 
