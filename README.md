@@ -1,4 +1,4 @@
-# Fashion - App 👗✨
+# Drip.com
 
 ## Overview
 
