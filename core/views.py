@@ -10,12 +10,13 @@ from .serializers import DirectMessageSerializer
 from django.db.models import Q
 from django.core.files.base import ContentFile
 import base64, uuid,os
-from ultralytics import YOLO
 import os
 from collections import Counter 
+import difflib
+from unidecode import unidecode
 
-# Load once globally to avoid reloading on every call
-APPAREL_DETECTOR_MODEL = YOLO("yolov8n-oiv7.pt")  # Change to custom model if needed
+
+
 from .ml import detect_apparel,is_obscene
 
 
@@ -205,6 +206,26 @@ def api_upload(request):
     image_apparel_map = {}
     apparel_detected = False
 
+    # for media in post.media_files.all():
+    #     if not media.is_image:
+    #         continue
+
+    #     file_path = media.file.path
+    #     if not os.path.isfile(file_path):
+    #         continue
+
+    #     labels = detect_apparel(file_path)  #  AI model
+
+    #     for result in labels:
+    #         label = result['label']
+    #         confidence = result.get('confidence', 0)
+    #         print("CONFIDENCE",confidence)
+    #         image_apparel_map.setdefault(label, []).append(media.file.url)
+    #         ApparelTag.objects.create(post=post, image=media, label=label, confidence=confidence)
+
+    #     if labels:
+    #         apparel_detected = True
+
     for media in post.media_files.all():
         if not media.is_image:
             continue
@@ -213,14 +234,25 @@ def api_upload(request):
         if not os.path.isfile(file_path):
             continue
 
-        labels = detect_apparel(file_path,APPAREL_DETECTOR_MODEL)  #  AI model
+        labels = detect_apparel(file_path)  # Detect clothing items with attributes
 
         for result in labels:
             label = result['label']
             confidence = result.get('confidence', 0)
-            print("CONFIDENCE",confidence)
+            color = result.get('color')
+            item = result.get('item')
+            print("CONFIDENCE:", confidence)
+
             image_apparel_map.setdefault(label, []).append(media.file.url)
-            ApparelTag.objects.create(post=post, image=media, label=label, confidence=confidence)
+
+            ApparelTag.objects.create(
+                post=post,
+                image=media,
+                label=label,
+                confidence=confidence,
+                color=color,
+                item=item
+            )
 
         if labels:
             apparel_detected = True
@@ -386,24 +418,75 @@ def api_for_you(request):
 @permission_classes([IsAuthenticated])
 def api_search(request):
     query = request.GET.get('q', '').lower().strip()
+    query = unidecode(query)  # Handle accented characters
+
     if not query:
         return Response([])
 
-    matched_users = User.objects.filter(username__icontains=query)
+    # Break into words (e.g., "blue dresses" => ["blue", "dresses"])
+    query_parts = query.split()
 
-    # Match posts by apparel label
-    matched_tags = ApparelTag.objects.filter(label__icontains=query).select_related('post', 'image')
-    matched_posts_dict = {}
+    # Normalize query by removing plurals (basic heuristic)
+    query_parts = [word[:-1] if word.endswith('s') else word for word in query_parts]
 
+    normalized_query = " ".join(query_parts)
+
+    matched_users = User.objects.filter(username__icontains=normalized_query)
+
+    # Get all tags
+    matched_tags = ApparelTag.objects.select_related('post', 'image')
+
+    # Prepare known vocab for fuzzy matching
+    known_labels = {tag.label.lower() for tag in matched_tags if tag.label}
+    known_colors = {tag.color.lower() for tag in matched_tags if tag.color}
+    known_items = {tag.item.lower() for tag in matched_tags if tag.item}
+    all_known_terms = known_labels | known_colors | known_items
+
+    # Match keywords to known terms using close matches
+    def fuzzy_match(word):
+        match = difflib.get_close_matches(word, all_known_terms, n=1, cutoff=0.7)
+        return match[0] if match else word
+
+    fuzzy_parts = [fuzzy_match(word) for word in query_parts]
+    fuzzy_query = " ".join(fuzzy_parts)
+
+    filtered_tags = []
     for tag in matched_tags:
+        match_score = 0
+
+        tag_label = (tag.label or '').lower()
+        tag_color = (tag.color or '').lower()
+        tag_item = (tag.item or '').lower()
+        combined = f"{tag_color} {tag_item}"
+
+        for part in fuzzy_parts:
+            if part in tag_label:
+                match_score += 1
+            if part in tag_color:
+                match_score += 1
+            if part in tag_item:
+                match_score += 1
+            if part in combined:
+                match_score += 2  # compound match
+
+        if match_score > 0:
+            filtered_tags.append((tag, match_score))
+
+    # Sort by match score
+    filtered_tags.sort(key=lambda x: x[1], reverse=True)
+
+    matched_posts_dict = {}
+    for tag, _ in filtered_tags:
         post = tag.post
         if post.id not in matched_posts_dict:
             matched_posts_dict[post.id] = {
-                'id': f'{post.id}',
+                'id': str(post.id),
                 'caption': post.caption,
                 'media': [m.file.url for m in post.media_files.all()],
                 'username': post.user,
-                'matched_label': tag.label
+                'matched_label': tag.label,
+                'color': tag.color,
+                'item': tag.item
             }
 
     results = {
@@ -438,6 +521,7 @@ def delete_comment(request, comment_id):
     comment.delete()
     return Response({'message': 'Comment deleted successfully.'}, status=status.HTTP_204_NO_CONTENT)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_recommended_posts(request, post_id):
@@ -446,37 +530,64 @@ def api_recommended_posts(request, post_id):
     except Post.DoesNotExist:
         return Response({'error': 'Post not found.'}, status=404)
 
-    # Get all apparel tags associated with the given post
-    tags = ApparelTag.objects.filter(post=source_post).values_list('label', flat=True)
-
-    if not tags:
+    tags = ApparelTag.objects.filter(post=source_post)
+    if not tags.exists():
         return Response({'message': 'No apparel tags found for this post.'}, status=200)
 
-    # Find other posts with the same tags
-    similar_tags_posts = ApparelTag.objects.filter(label__in=tags).exclude(post=source_post)
+    labels = set(tag.label for tag in tags if tag.label)
+    items = set(tag.item for tag in tags if tag.item)
+    colors = set(tag.color for tag in tags if tag.color)
 
-    # Count how many tags each other post shares
+    similar_tags = ApparelTag.objects.exclude(post=source_post).filter(
+        Q(label__in=labels) | Q(item__in=items) | Q(color__in=colors)
+    ).select_related('post')
+
     post_scores = Counter()
-    for tag in similar_tags_posts:
-        post_scores[tag.post_id] += 1
+    for tag in similar_tags:
+        score = 0
+        if tag.label in labels:
+            score += 2
+        if tag.item in items:
+            score += 1
+        if tag.color in colors:
+            score += 1
+        post_scores[tag.post_id] += score
 
-    # Sort by number of matching tags
-    recommended_post_ids = [post_id for post_id, _ in post_scores.most_common(5)]
+    # Sort post IDs by score
+    sorted_post_ids = [post_id for post_id, _ in post_scores.most_common(10)]
 
-    # Fetch the recommended Post objects
-    recommended_posts = Post.objects.filter(id__in=recommended_post_ids)
+    # Use in_bulk to fetch posts by ID efficiently
+    post_map = Post.objects.in_bulk(sorted_post_ids)
 
-    data = []
-    for post in recommended_posts:
-        data.append({
+    recommendations = []
+    for pid in sorted_post_ids:
+        post = post_map.get(pid)
+        if not post:
+            continue
+
+        matched_tags = ApparelTag.objects.filter(post=post).filter(
+            Q(label__in=labels) | Q(item__in=items) | Q(color__in=colors)
+        )
+
+        recommendations.append({
             'id': str(post.id),
             'caption': post.caption,
             'media': [media.file.url for media in post.media_files.all()],
-            'matched_tags': [t.label for t in ApparelTag.objects.filter(post=post, label__in=tags)],
+            'matched': [
+                {
+                    'label': tag.label,
+                    'item': tag.item,
+                    'color': tag.color
+                }
+                for tag in matched_tags
+            ],
+            'score': post_scores[pid]
         })
 
     return Response({
         'source_post': str(source_post.id),
-        'matched_labels': list(tags),
-        'recommendations': data
+        'matched_labels': list(labels),
+        'matched_items': list(items),
+        'matched_colors': list(colors),
+        'recommendations': recommendations
     })

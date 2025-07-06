@@ -106,10 +106,23 @@ class Comment(models.Model):
 
         return '/media/profile_images/blank-profile-picture.png'
     
-# Apparel Classifier model
+# # Apparel Classifier model
+# class ApparelTag(models.Model):
+#     post = models.ForeignKey(Post, on_delete=models.CASCADE)
+#     image = models.ForeignKey(PostMedia, on_delete=models.CASCADE)
+#     label = models.CharField(max_length=50)
+#     confidence = models.FloatField()
+
 class ApparelTag(models.Model):
     post = models.ForeignKey(Post, on_delete=models.CASCADE)
     image = models.ForeignKey(PostMedia, on_delete=models.CASCADE)
-    label = models.CharField(max_length=50)
+    
+    label = models.CharField(max_length=50)  # e.g., 't-shirt', 'jeans'
     confidence = models.FloatField()
 
+    # New fields
+    color = models.CharField(max_length=30, blank=True, null=True)
+    item = models.CharField(max_length=30, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.label} ({self.color}, {self.pattern}, {self.style})"
