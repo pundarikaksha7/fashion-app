@@ -1,33 +1,140 @@
-# Fashion - App 👗✨
+# Rack.com
 
 ## Overview
 
-Fashion App is a modern social media platform for fashion enthusiasts, designed to help users share, explore, and get feedback on outfits. Inspired by Instagram and Pinterest, this platform fosters engagement by allowing users to:
+**Rack** is a modern social media platform built exclusively for **fashion lovers, creators, and trend followers**. Inspired by the intuitive interfaces of Instagram and Pinterest, this app blends **user-driven fashion sharing** with **cutting-edge AI** to revolutionize how we engage with style online.
 
-✅ Share their fashion outfits
+Whether you’re planning your party look, checking out campus trends, or building an influencer following — Fashion App helps you **post, vote, recommend, and analyze outfits** in an intelligent, social-first environment.
 
-✅ Follow influencers and friends
+---
 
-✅ Discover trending styles
+## **🚀 Features at a Glance**
 
-✅ Get feedback on outfit choices
+### **👤 User Profiles & Social Features**
 
-This full-stack application is built with a Django backend and will feature a React.js frontend for a seamless user experience.
+- Create detailed profiles: Name, Age, Gender, Location, Fashion Preferences, Color Choices, and more.
+- Follow and be followed by other users.
+- Send **direct messages** to connect and collaborate.
+- Get real-time **likes, comments, and saves** on your posts.
+- Explore a “For You” feed based on people you follow.
 
+---
 
-## 🚀 Tech Stack
+### **📸 Post Types**
 
-### Backend
-	•	Django – Web framework for scalable backend development
-	•	Django REST Framework – API development
-	•	PostgreSQL/MySQL – Database management
-	•	Redis & Celery (Future) – For task queuing and caching
+### **1. Classic Posts**
 
-### Frontend (To Be Developed)
-	•	React.js – Component-based UI
-	•	Redux – State management
-	•	TailwindCSS / Material-UI – Styling framework
+- Upload one or more images in a post.
+- View zoomable photos with proper formatting.
+- Likes, comments, and saves available per post.
 
+### **2. Voting Posts**
+
+- Upload multiple outfit choices for a single event.
+- Followers **vote** for the best outfit — no likes, only votes.
+- Helps users decide what to wear based on real-time feedback.
+
+---
+
+## **🤖 AI-Powered Features**
+
+Rack is not just about social sharing. It uses AI to **analyze fashion** and enhance recommendations.
+
+### **🧠 Apparel Detection (YOLOv8 + Post-processing)**
+
+- Every uploaded image is run through an **object detection model** (YOLOv8) fine-tuned on fashion datasets like DeepFashion/OpenImages.
+- Automatically detects and classifies items like tshirt, shirt, jeans, dress, etc.
+- Uses this information to:
+    - Categorize posts.
+    - Suggest better content if no apparel is detected.
+    - Store structured data in the ApparelTag model.
+
+> Example: {"tshirt": ["image1.png"], "jeans": ["image1.png"]}
+> 
+
+### **🔍 Smart Search & Recommendations**
+
+- Search for **outfits and users** using tags (e.g., “skirt”, “blazer”, “oversized hoodie”).
+- Powered by structured YOLO-labeled tags.
+- Future upgrade path to **semantic search** using NLP (e.g., “Korean streetwear”, “pastel summer looks”).
+
+### **🚫 Obscene Content Filter (Upcoming)**
+
+- Uses pre-trained NSFW classifiers (Yahoo/OpenNSFW) to **block inappropriate content** before posting.
+
+---
+
+## **🧩 Tech Stack**
+
+| **Layer** | **Technology** |
+| --- | --- |
+| **Backend** | Django Rest Framework (DRF), Python |
+| **Frontend** | React.js (in progress) |
+| **Database** | PostgreSQL / SQLite (dev) |
+| **Media Storage** | File-based with Django MEDIA_ROOT |
+| **AI** | YOLOv8 (Ultralytics), Torch, Custom Filtering |
+| **Authentication** | DRF Token Authentication |
+| **Hosting Plan** | To be deployed via Render, Railway, or Docker-based VPS |
+
+---
+
+## **📱 MVP Checklist**
+
+### **✅ Core Social Features:**
+
+- Like / Comment / Save posts
+- Create multiple-image posts
+- Direct Messaging between users
+- Profile creation + edit
+- Photo zoom, view, and formatting
+- Follow/Unfollow mechanism
+- For You feed (filtered by following)
+- Voting-based outfit selection posts
+
+### **⚙️ Advanced Settings (In Progress):**
+
+- Visibility controls (private/public posts)
+- Blocked users
+- Tagged brands and product links
+- Notification system
+- Settings screen like Instagram
+
+### **🤖 Machine Learning:**
+
+- Apparel detection using YOLOv8
+- Post classification: Fashion vs. Non-fashion
+- Obscene content filtering (via NSFW detection)
+- Recommendation engine (outfit matches, similar users)
+- Visual + textual similarity-based search
+- Cold-start personalization via profile data
+
+---
+
+## **🌐 Deployment Plan**
+
+- Backend hosted with Gunicorn + Django
+- React frontend hosted via Vite + Netlify or Vercel
+- PostgreSQL for production
+- Static/media file hosting via AWS S3 or Django-based CDN
+- Model hosting: local server + GPU inference (or move to TorchServe)
+
+---
+
+## **💡 Vision Ahead**
+
+Fashion App aims to become a **decentralized fashion intelligence platform**:
+
+- A place where people **share** and **validate outfits**.
+- A tool that **helps brands discover trends and influencers**.
+- A community-driven **recommendation engine** for everyday wear.
+
+With advanced AI, we aim to build features like:
+
+- Auto-tagging brands via image detection.
+- Recommending what to wear based on weather + calendar.
+- Suggesting outfit combinations from your wardrobe history.
+
+---
 
 ## 🛠️ Installation & Setup
 
@@ -85,33 +192,6 @@ python3 manage.py runserver
 ```
 
 The app will be available at http://127.0.0.1:8000/
-
-
-## 🔮 Features (Upcoming & In Progress)
-
-### 🎨 Frontend (Upcoming)
-
-✅ Responsive & modern UI using React.js
-
-✅ User profiles & feeds
-
-✅ Explore trending outfits
-
-✅ AI-powered outfit recommendations (future roadmap)
-
-### 🛠 Backend (Implemented & Planned)
-
-✅ Django-based RESTful API
-
-✅ User authentication (JWT-based login)
-
-✅ Outfit uploading & image handling
-
-✅ Social engagement (likes, comments, follows)
-
-✅ AI-based virtual try-on feature (future roadmap)
-
-
 
 ## 📜 Contribution Guidelines
 
