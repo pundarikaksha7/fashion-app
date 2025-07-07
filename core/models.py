@@ -18,12 +18,26 @@ class DirectMessage(models.Model):
         return f"From {self.sender.username} to {self.recipient.username}"
 
 # Create your models here.
+# models.py
 class Profile(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     id_user = models.IntegerField()
+    
+    # Existing fields
     bio = models.TextField(blank=True)
-    profileimg = models.ImageField(upload_to='profile_images', default='blank-profile-picture.png')
+    profileimg = models.ImageField(upload_to='profile_images', blank=True, null=True)
     location = models.CharField(max_length=100, blank=True)
+
+    # New fields
+    name = models.CharField(max_length=100, blank=True)
+    age = models.PositiveIntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True)
+    occupation = models.CharField(max_length=100, blank=True)
+    college = models.CharField(max_length=100, blank=True)
+    city = models.CharField(max_length=100, blank=True)
+    state = models.CharField(max_length=100, blank=True)
+    fashion_preferences = models.TextField(blank=True)
+    color_preferences = models.TextField(blank=True)
 
     def __str__(self):
         return self.user.username

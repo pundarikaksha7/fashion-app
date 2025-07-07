@@ -51,7 +51,6 @@ def get_conversation(request, username):
     return Response(serializer.data)
 
 
-
 @api_view(['POST'])
 def api_signup(request):
     username = request.data.get('username')
@@ -72,7 +71,21 @@ def api_signup(request):
         return Response({'error': 'Email is already taken.'}, status=status.HTTP_400_BAD_REQUEST)
 
     user = User.objects.create_user(username=username, email=email, password=password)
-    Profile.objects.create(user=user, id_user=user.id)
+
+    Profile.objects.create(
+        user=user,
+        id_user=user.id,
+        name=request.data.get('name', ''),
+        age=request.data.get('age'),
+        gender=request.data.get('gender', ''),
+        occupation=request.data.get('occupation', ''),
+        college=request.data.get('college', ''),
+        city=request.data.get('city', ''),
+        state=request.data.get('state', ''),
+        fashion_preferences=request.data.get('fashion_preferences', ''),
+        color_preferences=request.data.get('color_preferences', ''),
+    )
+
     return Response({'message': 'User created successfully.'}, status=status.HTTP_201_CREATED)
 
 @api_view(['POST'])
@@ -96,11 +109,26 @@ def api_logout(request):
 @permission_classes([IsAuthenticated])
 def api_settings(request):
     profile = Profile.objects.get(user=request.user)
+
+    # Basic fields
     profile.bio = request.data.get('bio', profile.bio)
-    profile.location = request.data.get('location', profile.location)
+
+    # New fields
+    profile.name = request.data.get('name', profile.name)
+    profile.age = request.data.get('age', profile.age)
+    profile.gender = request.data.get('gender', profile.gender)
+    profile.occupation = request.data.get('occupation', profile.occupation)
+    profile.college = request.data.get('college', profile.college)
+    profile.city = request.data.get('city', profile.city)
+    profile.state = request.data.get('state', profile.state)
+    profile.fashion_preferences = request.data.get('fashion_preferences', profile.fashion_preferences)
+    profile.color_preferences = request.data.get('color_preferences', profile.color_preferences)
+
+    # Image
     image = request.FILES.get('image')
     if image:
         profile.profileimg = image
+
     profile.save()
     return Response({'message': 'Profile updated successfully.'})
 
@@ -116,61 +144,7 @@ def api_follow(request):
     FollowersCount.objects.create(follower=follower, user=user)
     return Response({'message': 'Followed'})
 
-# @api_view(['POST'])
-# @permission_classes([IsAuthenticated])
-# def api_upload(request):
-#     caption = request.data.get('caption', '')
-#     cropped_data_list = request.data.getlist('cropped_image_data')
-#     media_files = request.FILES.getlist('media')
 
-#     # if not cropped_data_list and not media_files:
-#     #     return Response({'error': 'No media provided.'}, status=status.HTTP_400_BAD_REQUEST)
-#     if not media_files:
-#         return Response({'error': 'No media provided.'}, status=status.HTTP_400_BAD_REQUEST)
-
-#     post = Post.objects.create(user=request.user.username, caption=caption)
-
-#     for cropped_data in cropped_data_list:
-#         if cropped_data:
-#             format, imgstr = cropped_data.split(';base64,')
-#             ext = format.split('/')[-1]
-#             data = ContentFile(base64.b64decode(imgstr), name=f'{uuid.uuid4()}.{ext}')
-#             PostMedia.objects.create(post=post, file=data, is_image=True)
-
-#     for file in media_files:
-#         is_image = file.content_type.startswith('image')
-#         PostMedia.objects.create(post=post, file=file, is_image=is_image)
-
-#     # return Response({'message': 'Post created successfully.'})
-#     image_apparel_map = {}
-#     apparel_detected = False
-
-#     for media in post.media_files.all():
-#             labels = detect_apparel(media.file.path)  # YOLOv8 or any model
-            
-#             for label in labels:
-#                 image_apparel_map.setdefault(label, []).append(media.file.url)
-#                 ApparelTag.objects.create(post=post, image=media, label=label, confidence=label.confidence)
-            
-#             if labels:
-#                 apparel_detected = True
-
-#     # Update post relevance flag
-#     post.is_apparel = apparel_detected
-#     if apparel_detected:
-#         post.save()
-
-#     if not apparel_detected:
-#         return Response({
-#             'warning': 'No apparel detected in uploaded images.',
-#             'suggestion': 'You may want to edit your post to include fashion-related content.',
-#             'post_id': str(post.id)
-#         }, status=status.HTTP_202_ACCEPTED)
-
-#     return Response({
-#         'message': 'Post created and analyzed.',
-#         'apparel_map': image_apparel_map
-#     })
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -205,26 +179,6 @@ def api_upload(request):
     # Apparel detection
     image_apparel_map = {}
     apparel_detected = False
-
-    # for media in post.media_files.all():
-    #     if not media.is_image:
-    #         continue
-
-    #     file_path = media.file.path
-    #     if not os.path.isfile(file_path):
-    #         continue
-
-    #     labels = detect_apparel(file_path)  #  AI model
-
-    #     for result in labels:
-    #         label = result['label']
-    #         confidence = result.get('confidence', 0)
-    #         print("CONFIDENCE",confidence)
-    #         image_apparel_map.setdefault(label, []).append(media.file.url)
-    #         ApparelTag.objects.create(post=post, image=media, label=label, confidence=confidence)
-
-    #     if labels:
-    #         apparel_detected = True
 
     for media in post.media_files.all():
         if not media.is_image:
@@ -342,12 +296,22 @@ def api_posts(request):
 def api_profile(request, username):
     user = get_object_or_404(User, username=username)
     profile = get_object_or_404(Profile, user=user)
+
     return Response({
         'username': user.username,
-        'name': user.username,
+        'name': profile.name,
+        'email': user.email,
         'bio': profile.bio,
-        'location': profile.location,
         'profileimg': profile.profileimg.url if profile.profileimg else '',
+
+        'age': profile.age,
+        'gender': profile.gender,
+        'occupation': profile.occupation,
+        'college': profile.college,
+        'city': profile.city,
+        'state': profile.state,
+        'fashion_preferences': profile.fashion_preferences,
+        'color_preferences': profile.color_preferences
     })
 
 @api_view(['GET'])
@@ -393,26 +357,6 @@ def api_for_you(request):
     ]
     return Response(suggestions)
 
-# @api_view(['GET'])
-# @permission_classes([IsAuthenticated])
-# def api_search(request):
-#     query = request.GET.get('q', '')
-#     if not query:
-#         return Response([])
-
-#     matched_users = User.objects.filter(username__icontains=query)
-#     matched_posts = Post.objects.filter(caption__icontains=query)
-
-#     results = [
-#         {'id': f'user-{user.id}', 'username': user.username} for user in matched_users
-#     ] + [
-#         {
-#             'id': f'post-{post.id}',
-#             'caption': post.caption,
-#             'media': [m.file.url for m in post.media_files.all()],
-#         } for post in matched_posts
-#     ]
-#     return Response(results)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
