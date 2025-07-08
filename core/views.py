@@ -345,18 +345,83 @@ def api_saved_posts(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def api_for_you(request):
-    all_posts = Post.objects.exclude(user=request.user.username).order_by('-created_at')
-    suggestions = [
-        {
+    user = request.user
+    profile = get_object_or_404(Profile, user=user)
+
+    # Extract preferences from profile
+    preferred_colors = [c.strip().lower() for c in (profile.color_preferences or '').split(',') if c.strip()]
+    preferred_items = [i.strip().lower() for i in (profile.fashion_preferences or '').split(',') if i.strip()]
+
+    # Tags from liked posts
+    liked_post_ids = LikePost.objects.filter(username=user.username).values_list('post_id', flat=True)
+    liked_tags = ApparelTag.objects.filter(post_id__in=liked_post_ids)
+
+    liked_labels = set(tag.label.lower() for tag in liked_tags)
+    liked_colors = set(tag.color.lower() for tag in liked_tags if tag.color)
+    liked_items = set(tag.item.lower() for tag in liked_tags if tag.item)
+
+    # Unified signals
+    all_colors = set(preferred_colors) | liked_colors
+    all_items = set(preferred_items) | liked_items
+    all_labels = liked_labels
+
+    # Match relevant ApparelTags
+    matched_tags = ApparelTag.objects.filter(
+        Q(color__in=all_colors) |
+        Q(item__in=all_items) |
+        Q(label__in=all_labels)
+    ).exclude(post__user=user.username).select_related('post')
+
+    post_score = Counter()
+    for tag in matched_tags:
+        score = 0
+        if tag.color and tag.color.lower() in all_colors:
+            score += 1
+        if tag.item and tag.item.lower() in all_items:
+            score += 2
+        if tag.label and tag.label.lower() in all_labels:
+            score += 1
+        post_score[tag.post_id] += score
+
+    # Top personalized post IDs by score
+    top_post_ids = [pid for pid, _ in post_score.most_common()]
+    top_posts = Post.objects.filter(id__in=top_post_ids)
+
+    personalized_results = []
+    for post in top_posts:
+        personalized_results.append({
             'id': post.id,
+            'username': post.user,
             'title': post.caption[:30] or 'Untitled',
             'caption': post.caption,
             'media': [m.file.url for m in post.media_files.all()],
-            'number of likes':post.no_of_likes
-        } for post in all_posts
-    ]
-    return Response(suggestions)
+            'number of likes': post.no_of_likes,
+            'score': post_score.get(post.id, 0)
+        })
 
+    # Add the rest (non-personalized posts), excluding user & already listed
+    all_other_posts = Post.objects.exclude(
+        user=user.username
+    ).exclude(
+        id__in=top_post_ids
+    ).order_by('-created_at')
+
+    generic_results = []
+    for post in all_other_posts:
+        generic_results.append({
+            'id': post.id,
+            'username': post.user,
+            'title': post.caption[:30] or 'Untitled',
+            'caption': post.caption,
+            'media': [m.file.url for m in post.media_files.all()],
+            'number of likes': post.no_of_likes,
+            'score': 0
+        })
+
+    # Final results = personalized first, then general
+    full_results = personalized_results + generic_results
+
+    return Response(full_results)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
