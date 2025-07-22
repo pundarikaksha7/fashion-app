@@ -22,7 +22,8 @@ class DirectMessage(models.Model):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     id_user = models.IntegerField()
-    
+    firebase_uid = models.CharField(max_length=128, unique=True)  
+
     # Existing fields
     bio = models.TextField(blank=True)
     profileimg = models.ImageField(upload_to='profile_images', blank=True, null=True)

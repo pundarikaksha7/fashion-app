@@ -19,3 +19,7 @@ Thumbs.db
 media/
 archive/
 archive_split/
+
+# Firebase files
+fashion-app-firebase-private-key.json
+get-token.html

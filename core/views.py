@@ -14,6 +14,9 @@ import os
 from collections import Counter 
 import difflib
 from unidecode import unidecode
+from firebase_admin import credentials, auth
+from .authentication import IsFirebaseAuthenticated
+from django.db import transaction
 
 
 
@@ -49,6 +52,91 @@ def get_conversation(request, username):
 
     serializer = DirectMessageSerializer(messages, many=True)
     return Response(serializer.data)
+
+@api_view(['POST'])
+def firebase_login(request):
+    id_token = request.data.get('idToken')
+    chosen_username = request.data.get('username')  # provided by client
+    custom_name = request.data.get('name')  # optional override
+
+    if not id_token or not chosen_username:
+        return Response({'error': 'idToken and username are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        # Firebase verification
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token['uid']
+        email = decoded_token.get('email')
+        name = custom_name or decoded_token.get('name') or email.split('@')[0]
+
+        # Check if user already exists via firebase UID
+        try:
+            profile = Profile.objects.get(firebase_uid=uid)
+            user = profile.user
+
+            # Validate username match
+            if user.username != chosen_username:
+                return Response({'error': 'This account is already registered with a different username.'}, status=status.HTTP_409_CONFLICT)
+
+        except Profile.DoesNotExist:
+            # If user with email exists, it's a returning user, but firebase_uid isn't set
+            existing_user = User.objects.filter(email=email).first()
+
+            if existing_user:
+                # Username must match exactly
+                if existing_user.username != chosen_username:
+                    return Response({'error': 'This email is already registered with a different username.'}, status=status.HTTP_409_CONFLICT)
+
+                # Set firebase_uid if missing
+                profile, created = Profile.objects.get_or_create(
+                    user=existing_user,
+                    defaults={
+                        'id_user': existing_user.id,
+                        'name': name,
+                        'firebase_uid': uid
+                    }
+                )
+                if not profile.firebase_uid:
+                    profile.firebase_uid = uid
+                    profile.save()
+
+                user = existing_user
+
+            else:
+                # Signup: check username uniqueness
+                if User.objects.filter(username=chosen_username).exists():
+                    return Response({'error': 'Username already taken.'}, status=status.HTTP_409_CONFLICT)
+
+                # Create new user + profile
+                with transaction.atomic():
+                    user = User.objects.create_user(
+                        username=chosen_username,
+                        email=email,
+                        first_name=name
+                    )
+                    Profile.objects.create(
+                        user=user,
+                        id_user=user.id,
+                        name=name,
+                        firebase_uid=uid
+                    )
+
+        # Login session
+        login(request, user)
+
+        return Response({
+            'message': 'Firebase login successful.',
+            'username': user.username,
+            'email': user.email,
+            'name': name
+        })
+
+    except auth.InvalidIdTokenError:
+        return Response({'error': 'Invalid Firebase ID token'}, status=status.HTTP_401_UNAUTHORIZED)
+    except auth.ExpiredIdTokenError:
+        return Response({'error': 'Expired Firebase ID token'}, status=status.HTTP_401_UNAUTHORIZED)
+    except Exception as e:
+        return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])
@@ -131,6 +219,31 @@ def api_settings(request):
 
     profile.save()
     return Response({'message': 'Profile updated successfully.'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_api_settings(request):
+    try:
+        profile = Profile.objects.get(user=request.user)
+    except Profile.DoesNotExist:
+        return Response({'error': 'Profile not found.'}, status=404)
+
+    data = {
+        'username': profile.user.username,
+        'bio': profile.bio,
+        'name': profile.name,
+        'age': profile.age,
+        'gender': profile.gender,
+        'occupation': profile.occupation,
+        'college': profile.college,
+        'city': profile.city,
+        'state': profile.state,
+        'fashion_preferences': profile.fashion_preferences,
+        'color_preferences': profile.color_preferences,
+        'profileimg': request.build_absolute_uri(profile.profileimg.url) if profile.profileimg else None,
+    }
+
+    return Response(data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

@@ -5,6 +5,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('api/token-auth/', obtain_auth_token),
+    path('api/firebase-login/', views.firebase_login),
     # Auth endpoints
     path('api/signup/', views.api_signup, name='api-signup'),
     path('api/signin/', views.api_signin, name='api-signin'),
@@ -20,7 +21,8 @@ urlpatterns = [
     path('api/like/', views.api_like_post, name='api-like-post'),
     path('api/save/<uuid:post_id>/', views.api_save_post, name='api-save-post'),
     path('api/follow/', views.api_follow, name='api-follow'),
-    path('api/settings/', views.api_settings, name='api-settings'),
+    path('api/settings/', views.api_settings, name='update_api-settings'),
+    path('api/settings/get/', views.get_api_settings, name='get-settings'), 
     path('api/upload/', views.api_upload, name='api-upload'),
     path('api/recommend/<uuid:post_id>/', views.api_recommended_posts),
     path('api/messages/send/', views.send_message),

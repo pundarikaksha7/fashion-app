@@ -28,6 +28,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+import firebase_admin
+from firebase_admin import credentials, auth
+
+FIREBASE_PROJECT_ID="fashion-app-f6e00"
+# Initialize Firebase Admin SDK
+cred = credentials.Certificate('./fashion-app-firebase-private-key.json')
+firebase_admin.initialize_app(cred)
+
 
 # Application definition
 
@@ -46,7 +54,11 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication'
+        'core.authentication.IsFirebaseAuthenticated'
+        # 'rest_framework.authentication.TokenAuthentication'
+    ],
+    'DEFAULT_PERMISSION_CLASSES':[
+        'rest_framework.permissions.IsAuthenticated'
     ]
 }
 
